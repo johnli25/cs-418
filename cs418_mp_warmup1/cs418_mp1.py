@@ -55,16 +55,11 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         line2 = coord3_list
         line3 = coord2_list
 
-    print("line2", line2)
-    print("line1", line1)
-
     mid_offset = min(len(line1), len(line2))
     
     for i in range(min(len(line1), len(line2))): 
         horiz_line_coords = []
-        print("hit")
         if (line1[i][0] == line2[i][0] and line1[i][1] == line2[i][1]):
-            print("baes")
             continue
         if (line1[i][0] > line2[i][0]):
             line1[i], line2[i] = line2[i], line1[i]
@@ -73,7 +68,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         if delta_d == 0:
             continue
         s = (float(delta[0] / delta_d), float(delta[1] / delta_d))
-        e = math.ceil(line1[i][0]) - line1[i][0]
+        e = math.ceil(line1[i][dim]) - line1[i][dim]
         o = (e * s[0], e * s[1])
         p = line1[i]
         p[dim] += o[dim]
@@ -83,7 +78,6 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             horiz_line_coords.append(curr_p)
             p[dim] += s[dim]
             # p[1] += s[1]
-        print("horiz;", horiz_line_coords)
         for horiz in horiz_line_coords:
             output.append(horiz)
 
@@ -104,18 +98,14 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         if delta_d == 0:
             continue
         s = (float(delta[0] / delta_d), float(delta[1] / delta_d))
-        print(delta_d)
         e = math.ceil(line_extended[mid_offset + i][dim]) - line_extended[i][dim]
         o = (e * s[0], e * s[1])
         p = line_extended[mid_offset + i]
         p[dim] += o[dim]
-        # p[1] += o[1]
         while(p[dim] < line3[i][dim]):
             curr_p = copy.deepcopy(p)
             horiz_line_coords.append(curr_p)
             p[dim] += s[dim]
-            # p[1] += s[1]
-        # print("horiz;", horiz_line_coords)
         for horiz in horiz_line_coords:
             output.append(horiz)
 
@@ -123,7 +113,6 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
 
 file_implement = open('implemented.txt', 'r')
 txt_files = file_implement.readlines()
-# print(len(txt_files))
 results = []
 results_name = []
 for f in txt_files:
@@ -141,7 +130,7 @@ for f in txt_files:
         line = line.strip().split()
         pic2.append(line)
 
-    print(pic2)
+    # print(pic2)
     width = 0
     height = 0
     xyzw_list = []
@@ -168,24 +157,13 @@ for f in txt_files:
             w = float(line[4])
             x_xywz = (x / w + 1) * (width / 2)
             y_xywz = (y / w + 1) * (height / 2)
-            # if (x_xywz < 0 or x_xywz >= width or y_xywz < 0 or y_xywz >= height):
-            #     continue
             xyzw_list.append(np.array([x_xywz, y_xywz, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2]]))
-            # image2.im.putpixel(x_xywz, y_xywz), hex_to_rgb((line[3][1:]))
-            # print("x: ", x_xywz)
-            # print("y: ", y_xywz)
-            # print(width)
-            # print(height)
-            # image2.im.putpixel((int(x_xywz), int(y_xywz)), current_rgb_color)
 
         if line[0] == 'rgb':
             current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), 255)
-            # image2.im.putpixel((int(x_xywz), int(y_xywz)), (int(float(line[1])), int(float(line[2])), int(float(line[3])), 255))
-            # for vertex in xyzw_list:
-            #     print(vertex)
-            #     image2.im.putpixel((int(vertex[0]), int(vertex[1])), (int(float(line[1])), int(float(line[2])), int(float(line[3])), 255))
+
         if line[0] == 'tri':
-            print(xyzw_list)
+            # print(xyzw_list)
             if int(line[1]) < 0:
                 i1 = xyzw_list[int(line[1])] 
             else:
@@ -198,58 +176,26 @@ for f in txt_files:
                 i3 = xyzw_list[int(line[3])] 
             else:
                 i3 = xyzw_list[int(line[3])-1] 
-            # print(xyzw_list)
-            # print("i1 i2 i3:" + str(i1) + " " + str(i2) + " " + str(i3))
             dda1 = dday(i1, i2, 2)
             dda2 = dday(i1, i3, 2)
             dda3 = dday(i2, i3, 2)
-            dda_rest = ddax(dda1, dda2, dda3, 0)
-            # print("dda2 and dda3: \n", dda_rest)
-            # print("len of all edges in triangle: " + str(len(dda1)) + ' ' + str(len(dda2)) + ' ,' + str(len(dda3)))
-            print("dda1: ", dda1)
-            print("dda2: ", dda2)
-            print("dda3: ", dda3)
-            # for vertex in dda1:
-            #     print(vertex)
-            #     if (round(vertex[0]) < 0 or round(vertex[0]) >= width or round(vertex[1]) < 0 or round(vertex[1]) >= height):
-            #         continue
-            #     image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
-            # for vertex2 in dda2:
-            #     print(vertex2)
-            #     if (round(vertex2[0]) < 0 or round(vertex2[0]) >= width or round(vertex2[1]) < 0 or round(vertex2[1]) >= height):
-            #         continue
-            #     image2.im.putpixel((round(vertex2[0]), round(vertex2[1])), (round(vertex2[2]), round(vertex2[3]), round(vertex2[4]), 255))
-            # for vertex3 in dda3:
-            #     print(vertex3)
-            #     if (round(vertex3[0]) < 0 or round(vertex3[0]) >= width or round(vertex3[1]) < 0 or round(vertex3[1]) >= height):
-            #         continue
-            #     image2.im.putpixel((round(vertex3[0]), round(vertex3[1])), (round(vertex3[2]), round(vertex3[3]), round(vertex3[4]), 255)) 
             for vertex in dda1:
-                print(vertex)
                 if (vertex[0] < 0 or vertex[0] >= width or vertex[1] < 0 or vertex[1] >= height):
                     continue
                 image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
             for vertex2 in dda2:
-                print("vertex 2", vertex2)
-
                 if (round(vertex2[0]) < 0 or round(vertex2[0]) >= width or round(vertex2[1]) < 0 or round(vertex2[1]) >= height):
                     continue
                 image2.im.putpixel((round(vertex2[0]), round(vertex2[1])), (round(vertex2[2]), round(vertex2[3]), round(vertex2[4]), 255))
             for vertex3 in dda3:
-                print(vertex3)
                 if (vertex3[0] < 0 or vertex3[0] >= width or vertex3[1] < 0 or vertex3[1] >= height):
                     continue
                 image2.im.putpixel((round(vertex3[0]), round(vertex3[1])), (round(vertex3[2]), round(vertex3[3]), round(vertex3[4]), 255))    
-            # for vertex_rest in dda_rest:
-            #     if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
-            #         continue
-            #     # print(vertex_rest)
-            #     image2.im.putpixel((int(vertex_rest[0]), int(vertex_rest[1])), (int(vertex_rest[2]), int(vertex_rest[3]), int(vertex_rest[4]), 255)) 
-
-            # if not dda3:
-            #     print(i2, i3) # these appear to be duplicates?
-            # if not dda1:
-            #     print(i1, i2) # these appear to be duplicates?
+            dda_rest = ddax(dda1, dda2, dda3, 0)
+            for vertex_rest in dda_rest:
+                if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
+                    continue
+                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), 255)) 
 
     results.append(image2)
     results_name.append(str(image_name))
