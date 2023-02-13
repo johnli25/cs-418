@@ -75,8 +75,13 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         if delta_d == 0:
             continue
         s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
-        e = math.ceil(line1[i][dim]) - line1[i][dim]
-        o = (e * s[0], e * s[1], e * s[2], e * s[3], e * s[4])
+        e = (math.ceil(line1[i][dim]) - line1[i][dim],
+             math.ceil(line1[i][1]) - line1[i][1],
+             math.ceil(line1[i][2]) - line1[i][2],
+             math.ceil(line1[i][3]) - line1[i][3],
+             math.ceil(line1[i][4]) - line1[i][4])
+
+        o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4])
         p = list(line1[i])
         p[0] += o[0]
         # p[1] += o[1] # DO NOT REMOVE! I MIGHT NEED THIS!
@@ -116,8 +121,12 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         if delta_d == 0:
             continue
         s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
-        e = math.ceil(line_extended[mid_offset + i][dim]) - line_extended[mid_offset + i][dim]
-        o = (e * s[0], e * s[1], e * s[2], e * s[3], e * s[4])
+        e = (math.ceil(line_extended[mid_offset + i][dim]) - line_extended[mid_offset + i][dim], 
+             math.ceil(line_extended[mid_offset + i][1]) - line_extended[mid_offset + i][1], 
+             math.ceil(line_extended[mid_offset + i][2]) - line_extended[mid_offset + i][2], 
+             math.ceil(line_extended[mid_offset + i][3]) - line_extended[mid_offset + i][3], 
+             math.ceil(line_extended[mid_offset + i][4]) - line_extended[mid_offset + i][4])
+        o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4])
         p = line_extended[mid_offset + i]
         p[dim] += o[dim]
         p[1] += o[1]

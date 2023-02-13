@@ -3,4 +3,4 @@
 build:
 
 run:
-	python cs418_warmup1.py $(file)
+	python cs418_mp1.py $(file)
