@@ -3,9 +3,34 @@ import math
 import copy
 import numpy as np
 
-def Sort(sub_li):
-    sub_li.sort(key = lambda x: x[1])
-    return sub_li
+def ddax_edge_case(coord1, coord2):
+    output = []
+    if (coord1[0] == coord2[0] and coord1[1] == coord2[1]):
+        return output
+    if (coord1[0] > coord2[0]):
+        coord1, coord2 = coord2, coord1
+    delta = (coord2[0] - coord1[0], coord2[1] - coord1[1], coord2[2] - coord1[2], coord2[3] - coord1[3], coord2[4] - coord1[4]) # tuple coords
+    delta_d = coord2[0] - coord1[0] # y direction difference coords
+    if delta_d == 0:
+        print(coord1)
+        print(coord2)
+        print("bro wtf")
+        return output
+
+    s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
+    e = math.ceil(coord1[0]) - coord1[0]
+    o = (e * s[0]) # , e * s[1], e * s[2], e * s[3], e * s[4])
+    p = list(coord1)
+    p[0] += o
+    print("p:::: ", p)
+    print(coord2[1])
+    while(p[0] < coord2[0]):
+        curr_p = copy.deepcopy(p)
+        output.append(curr_p)
+        p[0] += s[0]
+
+    print("output", output)
+    return output
 
 def hex_to_rgb(hex):
   rgb = []
@@ -23,17 +48,22 @@ def dday(coord1, coord2, dim):
         coord1, coord2 = coord2, coord1
     delta = (coord2[0] - coord1[0], coord2[1] - coord1[1], coord2[2] - coord1[2], coord2[3] - coord1[3], coord2[4] - coord1[4]) # tuple coords
     delta_d = coord2[1] - coord1[1] # y direction difference coords
-    s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
+    if delta_d == 0:
+        print("bro lol")
+        output = ddax_edge_case(coord1, coord2)
+        return output
 
+    s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
     e = math.ceil(coord1[1]) - coord1[1]
     o = (e * s[0], e * s[1], e * s[2], e * s[3], e * s[4])
     p = list(coord1)
-    print("p:::: ", p)
     p[0] += o[0]
     p[1] += o[1]
     p[2] += o[2]
     p[3] += o[3]
     p[4] += o[4]
+    print("p:::: ", p)
+    print(coord2[1])
     while(p[1] < coord2[1]):
         curr_p = copy.deepcopy(p)
         output.append(curr_p)
@@ -48,6 +78,10 @@ def dday(coord1, coord2, dim):
 def ddax(coord1_list, coord2_list, coord3_list, dim): 
     # NOTE: DIM ALWAYS = 0!!
     output = []
+    print("----------coords----------")
+    print(coord1_list)
+    print(coord2_list)
+    print("coord3", coord3_list)
     if (coord1_list[0][1] == coord2_list[0][1]):
         line1 = coord1_list
         line2 = coord2_list
@@ -108,6 +142,13 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
     if i == len(line2) - 1: # line2 finished, line1 still needs to be rasterized
         line_extended = line1
 
+    # print("line1, ", line1)
+    # print("line2, ", line2)
+    # print("line3, ", line3)
+    temp = [coord[1] for coord in line3]
+    if len(set(temp)) == 1: # IMPORTANT: checks if every y-coordinate in line/list is exactly the same
+        return output
+    
     for i in range(len(line3)): 
         horiz_line_coords = []
         if (line_extended[mid_offset + i][0] == line3[i][0] and line_extended[mid_offset + i][0] == line3[i][1]):
@@ -217,6 +258,9 @@ for f in txt_files:
             dda1 = dday(i1, i2, 2)
             dda2 = dday(i1, i3, 2)
             dda3 = dday(i2, i3, 2)
+            print("dda1", dda1)
+            print("dda2", dda2)
+            print("dda3", dda3)
             # for vertex in dda1:
             #     if (vertex[0] < 0 or vertex[0] >= width or vertex[1] < 0 or vertex[1] >= height):
             #         continue
