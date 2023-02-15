@@ -2,6 +2,7 @@ from PIL import Image
 import math
 import copy
 import numpy as np
+import cull
 
 def ddax_edge_case(coord1, coord2):
     output = []
@@ -22,14 +23,11 @@ def ddax_edge_case(coord1, coord2):
     o = (e * s[0]) # , e * s[1], e * s[2], e * s[3], e * s[4])
     p = list(coord1)
     p[0] += o
-    print("p:::: ", p)
-    print(coord2[1])
     while(p[0] < coord2[0]):
         curr_p = copy.deepcopy(p)
         output.append(curr_p)
         p[0] += s[0]
 
-    print("output", output)
     return output
 
 def hex_to_rgb(hex):
@@ -49,7 +47,6 @@ def dday(coord1, coord2, dim):
     delta = (coord2[0] - coord1[0], coord2[1] - coord1[1], coord2[2] - coord1[2], coord2[3] - coord1[3], coord2[4] - coord1[4]) # tuple coords
     delta_d = coord2[1] - coord1[1] # y direction difference coords
     if delta_d == 0:
-        print("bro lol")
         output = ddax_edge_case(coord1, coord2)
         return output
 
@@ -62,8 +59,6 @@ def dday(coord1, coord2, dim):
     p[2] += o[2]
     p[3] += o[3]
     p[4] += o[4]
-    print("p:::: ", p)
-    print(coord2[1])
     while(p[1] < coord2[1]):
         curr_p = copy.deepcopy(p)
         output.append(curr_p)
@@ -78,10 +73,6 @@ def dday(coord1, coord2, dim):
 def ddax(coord1_list, coord2_list, coord3_list, dim): 
     # NOTE: DIM ALWAYS = 0!!
     output = []
-    print("----------coords----------")
-    print(coord1_list)
-    print(coord2_list)
-    print("coord3", coord3_list)
     if (coord1_list[0][1] == coord2_list[0][1]):
         line1 = coord1_list
         line2 = coord2_list
@@ -130,7 +121,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             p[3] += s[3]
             p[4] += s[4]
             if curr_p in coord1_list or curr_p in coord2_list or curr_p in coord3_list:
-                print("hi")
+                # print("hi")
                 continue
             horiz_line_coords.append(curr_p)
         for horiz in horiz_line_coords:
@@ -142,9 +133,6 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
     if i == len(line2) - 1: # line2 finished, line1 still needs to be rasterized
         line_extended = line1
 
-    # print("line1, ", line1)
-    # print("line2, ", line2)
-    # print("line3, ", line3)
     temp = [coord[1] for coord in line3]
     if len(set(temp)) == 1: # IMPORTANT: checks if every y-coordinate in line/list is exactly the same
         return output
@@ -185,7 +173,6 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             if curr_p in coord1_list or curr_p in coord2_list or curr_p in coord3_list:
                 print("hi")
                 continue
-        print(horiz_line_coords)
         for horiz in horiz_line_coords:
             output.append(horiz)
 
@@ -195,6 +182,7 @@ file_implement = open('implemented.txt', 'r')
 txt_files = file_implement.readlines()
 results = []
 results_name = []
+cull_flag = False
 for f in txt_files:
     if f[-1] == '\n': # if \n at end of string
         file_input = f[:-1] # remove \n
@@ -210,7 +198,6 @@ for f in txt_files:
         line = line.strip().split()
         pic2.append(line)
 
-    # print(pic2)
     width = 0
     height = 0
     xyzw_list = []
@@ -257,32 +244,23 @@ for f in txt_files:
                 i3 = xyzw_list[int(line[3])-1] 
             dda1 = dday(i1, i2, 2)
             dda2 = dday(i1, i3, 2)
-            dda3 = dday(i2, i3, 2)
-            print("dda1", dda1)
-            print("dda2", dda2)
-            print("dda3", dda3)
-            # for vertex in dda1:
-            #     if (vertex[0] < 0 or vertex[0] >= width or vertex[1] < 0 or vertex[1] >= height):
-            #         continue
-            #     image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
-            # for vertex2 in dda2:
-            #     if (round(vertex2[0]) < 0 or round(vertex2[0]) >= width or round(vertex2[1]) < 0 or round(vertex2[1]) >= height):
-            #         continue
-            #     image2.im.putpixel((round(vertex2[0]), round(vertex2[1])), (round(vertex2[2]), round(vertex2[3]), round(vertex2[4]), 255))
-            # for vertex3 in dda3:
-            #     if (vertex3[0] < 0 or vertex3[0] >= width or vertex3[1] < 0 or vertex3[1] >= height):
-            #         continue
-            #     image2.im.putpixel((round(vertex3[0]), round(vertex3[1])), (round(vertex3[2]), round(vertex3[3]), round(vertex3[4]), 255))    
+            dda3 = dday(i2, i3, 2) 
+
+            # actual drawing part
+            if cull_flag == True:
+                if cull.dot_product(i1, i2, i3) == False:
+                    continue
             dda_rest = ddax(dda1, dda2, dda3, 0)
             for vertex_rest in dda_rest:
                 if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
                     continue
                 if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
-                    print("hit")
                     continue
-                print("vertex: ", vertex_rest)
-                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), 255)) 
-
+                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), 255))
+            
+        if line[0] == "cull":
+            cull_flag = True
+             
     results.append(image2)
     results_name.append(str(image_name))
 
