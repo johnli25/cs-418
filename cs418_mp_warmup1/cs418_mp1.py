@@ -2,7 +2,8 @@ from PIL import Image
 import math
 import copy
 import numpy as np
-import cull
+import otherFunc
+import sys
 
 def ddax_edge_case(coord1, coord2):
     output = []
@@ -95,24 +96,30 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             continue
         if (line1[i][0] > line2[i][0]):
             line1[i], line2[i] = line2[i], line1[i]
-        delta = (line2[i][dim] - line1[i][dim], line2[i][1] - line1[i][1], line2[i][2] - line1[i][2], line2[i][3] - line1[i][3], line2[i][4] - line1[i][4]) # tuple coords
+        delta = (line2[i][dim] - line1[i][dim], line2[i][1] - line1[i][1], line2[i][2] - line1[i][2], line2[i][3] - line1[i][3], line2[i][4] - line1[i][4],
+                 line2[i][5] - line1[i][5], line2[i][6] - line1[i][6]) # tuple coords
         delta_d = line2[i][dim] - line1[i][dim] # x direction difference coords
         if delta_d == 0:
             continue
-        s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
+        s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d),
+             (delta[5] / delta_d), (delta[6] / delta_d))
         e = (math.ceil(line1[i][dim]) - line1[i][dim],
              math.ceil(line1[i][1]) - line1[i][1],
              math.ceil(line1[i][2]) - line1[i][2],
              math.ceil(line1[i][3]) - line1[i][3],
-             math.ceil(line1[i][4]) - line1[i][4])
-
-        o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4])
+             math.ceil(line1[i][4]) - line1[i][4],
+             math.ceil(line1[i][5]) - line1[i][5],
+             math.ceil(line1[i][6]) - line1[i][6])
+        o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4], e[5] * s[5],
+             e[6] * s[6])
         p = list(line1[i])
         p[0] += o[0]
         # p[1] += o[1] # DO NOT REMOVE! I MIGHT NEED THIS!
         p[2] += o[2]
         p[3] += o[3]
         p[4] += o[4]
+        p[5] += o[5]
+        p[6] += o[6]
         while(p[dim] < line2[i][dim]):
             curr_p = copy.deepcopy(p)
             p[0] += s[0]
@@ -120,6 +127,8 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             p[2] += s[2]
             p[3] += s[3]
             p[4] += s[4]
+            p[5] += s[5]
+            p[6] += s[6]
             if curr_p in coord1_list or curr_p in coord2_list or curr_p in coord3_list:
                 # print("hi")
                 continue
@@ -145,24 +154,32 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             line_extended[mid_offset + i], line3[i] = line3[i], line_extended[mid_offset + i]
         delta = (line3[i][dim] - line_extended[mid_offset + i][dim], line3[i][1] - line_extended[mid_offset + i][1],
                  line3[i][2] - line_extended[mid_offset + i][2], line3[i][3] - line_extended[mid_offset + i][3],
-                 line3[i][4] - line_extended[mid_offset + i][4]) # tuple coords
+                 line3[i][4] - line_extended[mid_offset + i][4], line3[i][5] - line_extended[mid_offset + i][5],
+                 line3[i][6] - line_extended[mid_offset + i][6]) # tuple coords
         delta_d = line3[i][dim] - line_extended[mid_offset + i][dim] # x direction difference coords
         if delta_d == 0:
             continue
-        s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
+        s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d),
+             (delta[5] / delta_d), (delta[6] / delta_d))
         e = (math.ceil(line_extended[mid_offset + i][dim]) - line_extended[mid_offset + i][dim], 
              math.ceil(line_extended[mid_offset + i][1]) - line_extended[mid_offset + i][1], 
              math.ceil(line_extended[mid_offset + i][2]) - line_extended[mid_offset + i][2], 
              math.ceil(line_extended[mid_offset + i][3]) - line_extended[mid_offset + i][3], 
-             math.ceil(line_extended[mid_offset + i][4]) - line_extended[mid_offset + i][4])
-        o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4])
+             math.ceil(line_extended[mid_offset + i][4]) - line_extended[mid_offset + i][4],
+             math.ceil(line_extended[mid_offset + i][5]) - line_extended[mid_offset + i][5], 
+             math.ceil(line_extended[mid_offset + i][6]) - line_extended[mid_offset + i][6])
+        o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4], e[5] * s[5],
+             e[6] * s[6])
         p = line_extended[mid_offset + i]
         p[dim] += o[dim]
         p[1] += o[1]
         p[2] += o[2]
         p[3] += o[3]
         p[4] += o[4]
+        p[5] += o[5]
+        p[6] += o[6]
         while(p[dim] < line3[i][dim]):
+            # print("horiz", horiz_line_coords)
             curr_p = copy.deepcopy(p)
             horiz_line_coords.append(curr_p)
             p[dim] += s[dim]
@@ -170,99 +187,167 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             p[2] += s[2]
             p[3] += s[3]
             p[4] += s[4]
+            p[5] += s[5]
+            p[6] += s[6]
             if curr_p in coord1_list or curr_p in coord2_list or curr_p in coord3_list:
-                print("hi")
                 continue
         for horiz in horiz_line_coords:
             output.append(horiz)
-
     return output
 
-file_implement = open('implemented.txt', 'r')
-txt_files = file_implement.readlines()
+file_input = sys.argv[1]
+f = open(file_input, 'r')
 results = []
 results_name = []
+
+txt_input_clean = [] # is the list
+image_name = ""
+
+## clean data: strip whitespaces, commas, put into list, etc.
+for line in f.readlines():
+    line = line.strip().split()
+    txt_input_clean.append(line)
+
+#flags
 cull_flag = False
-for f in txt_files:
-    if f[-1] == '\n': # if \n at end of string
-        file_input = f[:-1] # remove \n
-    else:
-        file_input = f
+clipplane_flag = False
+clipplane_cnt = 1
+sRGB_flag = False
+line_flag = False
 
-    lines = open(file_input, 'r')
-    pic2 = [] # is the list
-    image_name = ""
+width = 0
+height = 0
+xyzw_list_orig = []
+xyzw_list = []
+current_rgb_color = (255,255,255,255)
+xy_to_rgb = {}
+x_xywz = 0
+y_xywz = 0
+clip1 = np.array([0, 0, 0, 0])
+clip2 = np.array([0, 0, 0, 0])
 
-    ## clean data: strip whitespaces, commas, put into list, etc.
-    for line in lines.readlines():
-        line = line.strip().split()
-        pic2.append(line)
-
-    width = 0
-    height = 0
-    xyzw_list = []
-    current_rgb_color = (255,255,255,255)
-    xy_to_rgb = {}
-    x_xywz = 0
-    y_xywz = 0
-    for line in pic2:
-        if len(line) == 0:
-            continue
-        if line[0] == "png":
-            width = int(line[1])
-            height = int(line[2])
-            image2 = Image.new("RGBA", (width, height), (0,0,0,0))
-            image_name = line[3]
-        if line[0] == "xyrgb":
-            image2.im.putpixel((int(line[1]), int(line[2])), (int(line[3]), int(line[4]), int(line[5]), 255))
-        if line[0] == 'xyc':
-            image2.im.putpixel((int(line[1]), int(line[2])), hex_to_rgb((line[3][1:])))
-        if line[0] == 'xyzw':
-            x = float(line[1])
-            y = float(line[2])
-            z = float(line[3])
-            w = float(line[4])
-            x_xywz = (x / w + 1) * (width / 2)
-            y_xywz = (y / w + 1) * (height / 2)
-            xyzw_list.append(np.array([x_xywz, y_xywz, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2]]))
-
-        if line[0] == 'rgb':
+tmp_cnt = 0
+for line in txt_input_clean:
+    if len(line) == 0:
+        continue
+    if line[0] == "png":
+        width = int(line[1])
+        height = int(line[2])
+        image2 = Image.new("RGBA", (width, height), (0,0,0,0))
+        image_name = line[3]
+    if line[0] == "xyrgb":
+        image2.im.putpixel((int(line[1]), int(line[2])), (int(line[3]), int(line[4]), int(line[5]), 255))
+    if line[0] == 'xyc':
+        image2.im.putpixel((int(line[1]), int(line[2])), hex_to_rgb((line[3][1:])))
+    if line[0] == 'xyzw':
+        x = float(line[1])
+        y = float(line[2])
+        z = float(line[3])
+        w = float(line[4])
+        xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], z, w]))
+        xyzw_list = copy.deepcopy(xyzw_list_orig)
+    if line[0] == 'rgb':
+        if sRGB_flag == True:
+            current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 255)
+            srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
+            current_rgb_color = tuple(srgb)
+        else:
             current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), 255)
 
-        if line[0] == 'tri':
-            if int(line[1]) < 0:
-                i1 = xyzw_list[int(line[1])] 
-            else:
-                i1 = xyzw_list[int(line[1])-1] 
-            if int(line[2]) <= -1:
-                i2 = xyzw_list[int(line[2])] 
-            else:
-                i2 = xyzw_list[int(line[2])-1] 
-            if int(line[3]) <= -1:
-                i3 = xyzw_list[int(line[3])] 
-            else:
-                i3 = xyzw_list[int(line[3])-1] 
-            dda1 = dday(i1, i2, 2)
-            dda2 = dday(i1, i3, 2)
-            dda3 = dday(i2, i3, 2) 
+    if line[0] == "line":
+        i1 = xyzw_list[int(line[1])]
+        i2 = xyzw_list[int(line[2])]
+        dda_8_pt = dday(i1, i2, 0)
+        dda_8_ptx = otherFunc.ddax_line(i1, i2)
+        print(dda_8_ptx)
+        for vertex in dda_8_ptx:
+            image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
+        for vertex in dda_8_pt:
+            image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
 
-            # actual drawing part
-            if cull_flag == True:
-                if cull.dot_product(i1, i2, i3) == False:
-                    continue
-            dda_rest = ddax(dda1, dda2, dda3, 0)
-            for vertex_rest in dda_rest:
-                if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
-                    continue
-                if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
-                    continue
-                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), 255))
-            
-        if line[0] == "cull":
-            cull_flag = True
-             
-    results.append(image2)
-    results_name.append(str(image_name))
+    if line[0] == 'tri':
+        # xyzw_list.append(np.array([x_xywz, y_xywz, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], z, w]))
+        tmp_cnt += 1
+        print("temp cnt", tmp_cnt)
+        if int(line[1]) < 0:
+            i1 = xyzw_list[int(line[1])] 
+        else:
+            i1 = xyzw_list[int(line[1])-1] 
+        if int(line[2]) <= -1:
+            i2 = xyzw_list[int(line[2])] 
+        else:
+            i2 = xyzw_list[int(line[2])-1] 
+        if int(line[3]) <= -1:
+            i3 = xyzw_list[int(line[3])] 
+        else:
+            i3 = xyzw_list[int(line[3])-1] 
+
+        if clipplane_flag == True:
+            p1 = clip1[0]
+            p2 = clip1[1]
+            p3 = clip1[2]
+            p4 = clip1[3]
+            p1_2 = clip2[0]
+            p2_2 = clip2[1]
+            p3_2 = clip2[2]
+            p4_2 = clip2[3]
+            # print("clip1, ", clip1)
+            x_orig = (2 * vertex_rest[0]) / width - 1
+            y_orig = (2 * vertex_rest[1]) / height - 1
+            if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([x_orig, y_orig, vertex_rest[-2], vertex_rest[-1]])) == False:
+                # print("yo")
+                continue
+            if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([x_orig, y_orig, vertex_rest[-2], vertex_rest[-1]])) == False:
+                print("yo2")
+                continue
+
+        for v in [i1, i2, i3]: # viewport transformation
+            x = copy.deepcopy(v[0])
+            y = copy.deepcopy(v[1])
+            z = copy.deepcopy(v[-2])
+            w = copy.deepcopy(v[-1])
+            v[0] = (x / w + 1) * width / 2
+            v[1] = (y / w + 1) * height / 2
+
+        dda1 = dday(i1, i2, 2)
+        dda2 = dday(i1, i3, 2)
+        dda3 = dday(i2, i3, 2) 
+        # print("dda1", dda1)
+        # print("dda2", dda2)
+        # print("dda3", dda3)
+        # actual drawing part
+        if cull_flag == True:
+            if otherFunc.cross_product(i1, i2, i3) == False:
+                continue
+        dda_rest = ddax(dda1, dda2, dda3, 0)
+        for vertex_rest in dda_rest:
+            if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
+                continue
+            if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
+                continue
+            if sRGB_flag == True:
+                srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4], 255))
+                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), 255))
+                continue
+            image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), 255))
+
+    if line[0] == "cull":
+        cull_flag = True
+    if line[0] == "clipplane" and clipplane_cnt == 1:
+        clipplane_flag = True
+        if clipplane_cnt == 1:
+            clip1 = np.array([float(line[1]), float(line[2]), float(line[3]), float(line[4])])
+            clipplane_cnt += 1
+        if clipplane_cnt == 2:
+            clip2 = np.array([float(line[1]), float(line[2]), float(line[3]), float(line[4])])
+
+    if line[0] == "sRGB":
+        sRGB_flag = True
+    if line[0] == "line":
+        line_flag = True
+
+results.append(image2)
+results_name.append(str(image_name))
 
 for i in range(len(results)):
     results[i].save(str(results_name[i]))
