@@ -35,6 +35,9 @@ def linear_to_srgb(lin):
         srgb.append(s_col)
     return np.array(srgb)
 
+def blend_rgba(srgb_lin):
+    pass
+
 def ddax_line(coord1, coord2):
     output = []
     if (coord1[0] == coord2[0] and coord1[1] == coord2[1]):

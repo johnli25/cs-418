@@ -214,6 +214,7 @@ clipplane_flag = False
 clipplane_cnt = 1
 sRGB_flag = False
 line_flag = False
+rgba_flag = False
 
 width = 0
 height = 0
@@ -249,6 +250,9 @@ for line in txt_input_clean:
     if line[0] == 'rgb':
         if sRGB_flag == True:
             current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 255)
+            if rgba_flag == True:
+
+                continue
             srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
             current_rgb_color = tuple(srgb)
         else:
@@ -291,15 +295,14 @@ for line in txt_input_clean:
             p2_2 = clip2[1]
             p3_2 = clip2[2]
             p4_2 = clip2[3]
-            # print("clip1, ", clip1)
-            x_orig = (2 * vertex_rest[0]) / width - 1
-            y_orig = (2 * vertex_rest[1]) / height - 1
-            if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([x_orig, y_orig, vertex_rest[-2], vertex_rest[-1]])) == False:
-                # print("yo")
-                continue
-            if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([x_orig, y_orig, vertex_rest[-2], vertex_rest[-1]])) == False:
-                print("yo2")
-                continue
+
+            for vtx in [i1, i2, i3]:
+                # what to do with after checking clip_plane???
+                if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
+                    print("beging clip1")
+                # what to do with after checking clip_plane???
+                if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
+                    print("begin clip2")
 
         for v in [i1, i2, i3]: # viewport transformation
             x = copy.deepcopy(v[0])
@@ -345,6 +348,8 @@ for line in txt_input_clean:
         sRGB_flag = True
     if line[0] == "line":
         line_flag = True
+    if line[0] == "rgba":
+        rgba_flag == True
 
 results.append(image2)
 results_name.append(str(image_name))
