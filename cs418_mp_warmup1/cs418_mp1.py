@@ -245,19 +245,31 @@ for line in txt_input_clean:
         y = float(line[2])
         z = float(line[3])
         w = float(line[4])
-        xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], z, w]))
+        xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
         xyzw_list = copy.deepcopy(xyzw_list_orig)
+        print("current rgb color", current_rgb_color)
+        print("xyzw", xyzw_list)
     if line[0] == 'rgb':
         if sRGB_flag == True:
-            current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 255)
-            if rgba_flag == True:
-
-                continue
+            current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 1)
             srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
+            # if rgba_flag == True:
+            #     current_rgb_color[3] = line[3]
+            #     rgba = otherFunc.blend_rgba(srgb)
+            #     current_rgb_color = tuple(rgba)
+            #     continue
             current_rgb_color = tuple(srgb)
         else:
-            current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), 255)
-
+            current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), int(float(line[4])))
+    if line[0] == 'rgba':
+        if sRGB_flag == True:
+            current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, float(line[4]))
+            srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
+            print("cur rgb", current_rgb_color)
+            current_rgb_color = tuple(srgb)
+            print("cur rgb", current_rgb_color)
+        else:
+            current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), float(line[4]))
     if line[0] == "line":
         i1 = xyzw_list[int(line[1])]
         i2 = xyzw_list[int(line[2])]
@@ -272,19 +284,20 @@ for line in txt_input_clean:
     if line[0] == 'tri':
         # xyzw_list.append(np.array([x_xywz, y_xywz, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], z, w]))
         tmp_cnt += 1
+        print(line)
         print("temp cnt", tmp_cnt)
         if int(line[1]) < 0:
-            i1 = xyzw_list[int(line[1])] 
+            i1 = copy.deepcopy(xyzw_list[int(line[1])])
         else:
-            i1 = xyzw_list[int(line[1])-1] 
+            i1 = copy.deepcopy(xyzw_list[int(line[1])-1])
         if int(line[2]) <= -1:
-            i2 = xyzw_list[int(line[2])] 
+            i2 = copy.deepcopy(xyzw_list[int(line[2])])
         else:
-            i2 = xyzw_list[int(line[2])-1] 
+            i2 = copy.deepcopy(xyzw_list[int(line[2])-1]) 
         if int(line[3]) <= -1:
-            i3 = xyzw_list[int(line[3])] 
+            i3 = copy.deepcopy(xyzw_list[int(line[3])])
         else:
-            i3 = xyzw_list[int(line[3])-1] 
+            i3 = copy.deepcopy(xyzw_list[int(line[3])-1])
 
         if clipplane_flag == True:
             p1 = clip1[0]
@@ -304,20 +317,30 @@ for line in txt_input_clean:
                 if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
                     print("begin clip2")
 
+        print("i1 before", i1)
+        print("i2 before", i2)
+        print("i3 before", i3)
         for v in [i1, i2, i3]: # viewport transformation
             x = copy.deepcopy(v[0])
             y = copy.deepcopy(v[1])
             z = copy.deepcopy(v[-2])
             w = copy.deepcopy(v[-1])
+            # print("xyzw", x, y, z, w)
             v[0] = (x / w + 1) * width / 2
             v[1] = (y / w + 1) * height / 2
+            # print("v: ", v)
 
+        print("i1", i1)
+        print("i2", i2)
+        print("i3", i3)
         dda1 = dday(i1, i2, 2)
         dda2 = dday(i1, i3, 2)
         dda3 = dday(i2, i3, 2) 
-        # print("dda1", dda1)
-        # print("dda2", dda2)
-        # print("dda3", dda3)
+        print("after:::::::")
+        print("i1", i1)
+        print("i2", i2)
+        print("i3", i3)
+        print("xyzw: ", xyzw_list)
         # actual drawing part
         if cull_flag == True:
             if otherFunc.cross_product(i1, i2, i3) == False:
@@ -329,10 +352,11 @@ for line in txt_input_clean:
             if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
                 continue
             if sRGB_flag == True:
-                srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4], 255))
-                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), 255))
+                srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4], vertex_rest[5]))
+                # print(vertex_rest)
+                image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(srgb_final[3] * 255)))
                 continue
-            image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), 255))
+            image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), round(vertex_rest[5])))
 
     if line[0] == "cull":
         cull_flag = True
@@ -348,8 +372,8 @@ for line in txt_input_clean:
         sRGB_flag = True
     if line[0] == "line":
         line_flag = True
-    if line[0] == "rgba":
-        rgba_flag == True
+    # if line[0] == "rgba":
+    #     rgba_flag == True
 
 results.append(image2)
 results_name.append(str(image_name))
