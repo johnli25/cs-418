@@ -366,7 +366,6 @@ for line in txt_input_clean:
                     r_s = copy.deepcopy(srgb_final[0])
                     g_s = copy.deepcopy(srgb_final[1])
                     b_s = copy.deepcopy(srgb_final[2])
-
                     r_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0])
                     g_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
                     b_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
@@ -381,7 +380,7 @@ for line in txt_input_clean:
                     gprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
                     bprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
 
-                    image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(r_s * 255)), min(255, round(g_s * 255)), min(255, round(b_s * 255)), min(255, round(a_prime * 255))))
+                    image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(rprime * 255)), min(255, round(gprime* 255)), min(255, round(bprime * 255)), min(255, round(a_prime * 255))))
                     continue
                 image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(srgb_final[3] * 255)))
                 continue
