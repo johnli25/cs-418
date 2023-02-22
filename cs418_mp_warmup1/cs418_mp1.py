@@ -363,21 +363,25 @@ for line in txt_input_clean:
                     alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])] += a_s # + a_d*(1 - a_s)
                     a_prime = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
 
-                    r_d = copy.deepcopy(srgb_final[0])
-                    g_d = copy.deepcopy(srgb_final[1])
-                    b_d = copy.deepcopy(srgb_final[2])
+                    r_s = copy.deepcopy(srgb_final[0])
+                    g_s = copy.deepcopy(srgb_final[1])
+                    b_s = copy.deepcopy(srgb_final[2])
 
-                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0] = r_d * a_d*(1 - a_s)/a_prime # r
-                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1] = g_d * a_d*(1 - a_s)/a_prime # g
-                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2] = b_d * a_d*(1 - a_s)/a_prime # b
-                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0] += r_d
-                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1] += g_d
-                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2] += b_d
+                    r_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0])
+                    g_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
+                    b_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
+
+                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0] = (a_s / a_prime)*r_s + r_d * a_d*(1 - a_s)/a_prime # r
+                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1] = (a_s / a_prime)*g_s + g_d * a_d*(1 - a_s)/a_prime # g
+                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2] = (a_s / a_prime)*b_s + b_d * a_d*(1 - a_s)/a_prime # b
+                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0] += r_d
+                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1] += g_d
+                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2] += b_d
                     rprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0])
                     gprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
                     bprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
 
-                    image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(rprime * 255)), min(255, round(gprime * 255)), min(255, round(bprime * 255)), min(255, round(a_prime * 255))))
+                    image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(r_s * 255)), min(255, round(g_s * 255)), min(255, round(b_s * 255)), min(255, round(a_prime * 255))))
                     continue
                 image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(srgb_final[3] * 255)))
                 continue
