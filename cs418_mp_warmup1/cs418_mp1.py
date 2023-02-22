@@ -226,6 +226,9 @@ x_xywz = 0
 y_xywz = 0
 clip1 = np.array([0, 0, 0, 0])
 clip2 = np.array([0, 0, 0, 0])
+alpha_buffer = []
+rgb_buffer = []
+alpha_flag = False
 
 tmp_cnt = 0
 for line in txt_input_clean:
@@ -236,10 +239,8 @@ for line in txt_input_clean:
         height = int(line[2])
         image2 = Image.new("RGBA", (width, height), (0,0,0,0))
         image_name = line[3]
-    if line[0] == "xyrgb":
-        image2.im.putpixel((int(line[1]), int(line[2])), (int(line[3]), int(line[4]), int(line[5]), 255))
-    if line[0] == 'xyc':
-        image2.im.putpixel((int(line[1]), int(line[2])), hex_to_rgb((line[3][1:])))
+        alpha_buffer = np.zeros((width, height))
+        rgb_buffer = np.zeros((width, height, 3))
     if line[0] == 'xyzw':
         x = float(line[1])
         y = float(line[2])
@@ -262,14 +263,13 @@ for line in txt_input_clean:
         else:
             current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), int(float(line[4])))
     if line[0] == 'rgba':
+        rgba_flag = True
         if sRGB_flag == True:
             current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, float(line[4]))
             srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
-            print("cur rgb", current_rgb_color)
+            # print("cur rgb", current_rgb_color)
             current_rgb_color = tuple(srgb)
-            print("cur rgb", current_rgb_color)
-        else:
-            current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), float(line[4]))
+            # current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), float(line[4]))
     if line[0] == "line":
         i1 = xyzw_list[int(line[1])]
         i2 = xyzw_list[int(line[2])]
@@ -346,6 +346,9 @@ for line in txt_input_clean:
             if otherFunc.cross_product(i1, i2, i3) == False:
                 continue
         dda_rest = ddax(dda1, dda2, dda3, 0)
+        # for vertex in dda_rest:
+        #     alpha_buffer[][]
+
         for vertex_rest in dda_rest:
             if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
                 continue
@@ -353,7 +356,29 @@ for line in txt_input_clean:
                 continue
             if sRGB_flag == True:
                 srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4], vertex_rest[5]))
-                # print(vertex_rest)
+                # print(srgb_final)
+                if rgba_flag == True:
+                    a_d = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
+                    a_s = copy.deepcopy(srgb_final[3])
+                    alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])] += a_s # + a_d*(1 - a_s)
+                    a_prime = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
+
+                    r_d = copy.deepcopy(srgb_final[0])
+                    g_d = copy.deepcopy(srgb_final[1])
+                    b_d = copy.deepcopy(srgb_final[2])
+
+                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0] = r_d * a_d*(1 - a_s)/a_prime # r
+                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1] = g_d * a_d*(1 - a_s)/a_prime # g
+                    # rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2] = b_d * a_d*(1 - a_s)/a_prime # b
+                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0] += r_d
+                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1] += g_d
+                    rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2] += b_d
+                    rprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0])
+                    gprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
+                    bprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
+
+                    image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(rprime * 255)), min(255, round(gprime * 255)), min(255, round(bprime * 255)), min(255, round(a_prime * 255))))
+                    continue
                 image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(srgb_final[3] * 255)))
                 continue
             image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), round(vertex_rest[5])))

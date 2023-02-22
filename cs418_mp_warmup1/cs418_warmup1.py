@@ -67,7 +67,6 @@ for line in pic2:
     if line[0] == "xyrgb":
         image2.im.putpixel((int(line[1]), int(line[2])), (int(line[3]), int(line[4]), int(line[5]), 255))
     if line[0] == 'xyc':
-        # print(hex_to_rgb((line[3][1:])))
         image2.im.putpixel((int(line[1]), int(line[2])), hex_to_rgb((line[3][1:])))
 
 print(image2)
