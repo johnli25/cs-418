@@ -360,7 +360,7 @@ for line in txt_input_clean:
                 if rgba_flag == True:
                     a_d = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
                     a_s = copy.deepcopy(srgb_final[3])
-                    alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])] += a_s # + a_d*(1 - a_s)
+                    alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = a_s + a_d*(1 - a_s)
                     a_prime = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
 
                     r_s = copy.deepcopy(srgb_final[0])
