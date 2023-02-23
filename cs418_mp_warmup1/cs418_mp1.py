@@ -220,7 +220,7 @@ width = 0
 height = 0
 xyzw_list_orig = []
 xyzw_list = []
-current_rgb_color = (255,255,255,255)
+current_rgb_color = [255,255,255,255]
 xy_to_rgb = {}
 x_xywz = 0
 y_xywz = 0
@@ -252,23 +252,26 @@ for line in txt_input_clean:
         print("xyzw", xyzw_list)
     if line[0] == 'rgb':
         if sRGB_flag == True:
-            current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 1)
+            current_rgb_color = [float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 1]
             srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
             # if rgba_flag == True:
             #     current_rgb_color[3] = line[3]
             #     rgba = otherFunc.blend_rgba(srgb)
             #     current_rgb_color = tuple(rgba)
             #     continue
-            current_rgb_color = tuple(srgb)
+            current_rgb_color = list(srgb)
         else:
-            current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), int(float(line[4])))
+            current_rgb_color = [int(float(line[1])), int(float(line[2])), int(float(line[3])), int(float(line[4]))]
     if line[0] == 'rgba':
         rgba_flag = True
         if sRGB_flag == True:
-            current_rgb_color = (float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, float(line[4]))
+            current_rgb_color = [float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, float(line[4])]
             srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
             # print("cur rgb", current_rgb_color)
-            current_rgb_color = tuple(srgb)
+            print("len: ", len(srgb))
+            for i in range(len(srgb)):
+                current_rgb_color[i] = srgb[i]
+            current_rgb_color = list(srgb)
             # current_rgb_color = (int(float(line[1])), int(float(line[2])), int(float(line[3])), float(line[4]))
     if line[0] == "line":
         i1 = xyzw_list[int(line[1])]
