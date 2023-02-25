@@ -277,7 +277,7 @@ for line in txt_input_clean:
             #     continue
             current_rgb_color = list(srgb)
         else:
-            current_rgb_color = [int(float(line[1])), int(float(line[2])), int(float(line[3])), int(float(line[4]))]
+            current_rgb_color = [int(float(line[1])), int(float(line[2])), int(float(line[3])), 255]
     if line[0] == 'rgba':
         rgba_flag = True
         if sRGB_flag == True:
@@ -289,6 +289,15 @@ for line in txt_input_clean:
     if line[0] == "line":
         i1 = xyzw_list[int(line[1])]
         i2 = xyzw_list[int(line[2])]
+        for v in [i1, i2]: # viewport transformation
+            x = copy.deepcopy(v[0])
+            y = copy.deepcopy(v[1])
+            z = copy.deepcopy(v[-2])
+            w = copy.deepcopy(v[-1])
+            # print("xyzw", x, y, z, w)
+            v[0] = (x / w + 1) * width / 2
+            v[1] = (y / w + 1) * height / 2
+
         dda_8_pt = dday(i1, i2, 0)
         dda_8_ptx = otherFunc.ddax_line(i1, i2)
         print(dda_8_ptx)
