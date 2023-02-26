@@ -161,16 +161,16 @@ for line in txt_input_clean:
             if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
                 continue
             if sRGB_flag == True:
-                srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
+                # srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
                 if rgba_flag == True:
                     a_d = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
                     a_s = copy.deepcopy(vertex_rest[5])
                     alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = a_s + a_d*(1 - a_s)
                     a_prime = copy.deepcopy(alpha_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
 
-                    r_s = copy.deepcopy(srgb_final[0])
-                    g_s = copy.deepcopy(srgb_final[1])
-                    b_s = copy.deepcopy(srgb_final[2])
+                    r_s = copy.deepcopy(vertex_rest[2])
+                    g_s = copy.deepcopy(vertex_rest[3])
+                    b_s = copy.deepcopy(vertex_rest[4])
                     r_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][0])
                     g_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
                     b_d = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
@@ -183,8 +183,11 @@ for line in txt_input_clean:
                     gprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
                     bprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
 
+                    rpime, gprime, bprime = otherFunc.linear_to_srgb((rprime, gprime, bprime))
+
                     image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(rprime * 255)), min(255, round(gprime* 255)), min(255, round(bprime * 255)), min(255, round(a_prime * 255))))
                     continue
+                srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
                 image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(vertex_rest[5] * 255)))
                 continue
             image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), round(vertex_rest[5])))
