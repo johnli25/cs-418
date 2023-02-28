@@ -65,11 +65,6 @@ for line in txt_input_clean:
         if sRGB_flag == True:
             current_rgb_color = [float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 1]
             srgb = otherFunc.srgb_to_linear(np.array(current_rgb_color))
-            # if rgba_flag == True:
-            #     current_rgb_color[3] = line[3]
-            #     rgba = otherFunc.blend_rgba(srgb)
-            #     current_rgb_color = tuple(rgba)
-            #     continue
             current_rgb_color = list(srgb)
         else:
             current_rgb_color = [int(float(line[1])), int(float(line[2])), int(float(line[3])), 255]
@@ -134,7 +129,6 @@ for line in txt_input_clean:
                 # what to do with after checking clip_plane???
                 if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
                     print("begin clip2")
-
 
         for v in [i1, i2, i3]: # viewport transformation
             x = copy.deepcopy(v[0])
