@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import math
+from PIL import Image
 
 def cross_product(i1, i2, i3): # cull
     a = np.array([i1[0] - i2[0], i1[1] - i2[1]])
@@ -34,6 +35,11 @@ def linear_to_srgb(lin):
         s_col = copy.deepcopy(s)
         srgb.append(s_col)
     return np.array(srgb)
+
+def cull_edge_check(image, dda_rest):
+    for i,j in zip(range(19, 66), range(20, 113, 2)): # x-coord
+            # print("i and j: ", i, j)
+            image.im.putpixel((i, j), (round(dda_rest[0][2]), round(dda_rest[0][3]), round(dda_rest[0][4]), 255))
 
 def blend_rgba(srgb_lin):
     pass

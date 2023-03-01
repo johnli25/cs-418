@@ -144,10 +144,10 @@ for line in txt_input_clean:
         dda3 = dda.dday(i2, i3, 2) 
 
         # actual drawing part
-        if cull_flag == True:
+        dda_rest = dda.ddax(dda1, dda2, dda3, 0)
+        if cull_flag == True: # (66, 113)
             if otherFunc.cross_product(i1, i2, i3) == False:
                 continue
-        dda_rest = dda.ddax(dda1, dda2, dda3, 0)
 
         for vertex_rest in dda_rest:
             if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
@@ -185,6 +185,9 @@ for line in txt_input_clean:
                 image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(vertex_rest[5] * 255)))
                 continue
             image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), round(vertex_rest[5])))
+
+        if cull_flag == True: # to help debug weird edge case occuring with cull
+            otherFunc.cull_edge_check(image2, dda_rest)
 
     if line[0] == "cull":
         cull_flag = True
