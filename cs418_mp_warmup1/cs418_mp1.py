@@ -181,7 +181,7 @@ for line in txt_input_clean:
                     gprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][1])
                     bprime = copy.deepcopy(rgb_buffer[round(vertex_rest[0])][round(vertex_rest[1])][2])
 
-                    rpime, gprime, bprime = otherFunc.linear_to_srgb((rprime, gprime, bprime))
+                    rprime, gprime, bprime = otherFunc.linear_to_srgb((rprime, gprime, bprime))
 
                     image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (min(255, round(rprime * 255)), min(255, round(gprime* 255)), min(255, round(bprime * 255)), min(255, round(a_prime * 255))))
                     continue
