@@ -88,12 +88,16 @@ for line in txt_input_clean:
             v[0] = (x / w + 1) * width / 2
             v[1] = (y / w + 1) * height / 2
 
-        dda_8_pt = dda.dday(i1, i2, 0)
+        # if abs(i1[0] - i2[0]) > abs(i1[1] > i2[1]):
         dda_8_ptx = otherFunc.ddax_line(i1, i2)
-        print(dda_8_ptx)
         for vertex in dda_8_ptx:
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
+        # else:
+        dda_8_pt = dda.dday(i1, i2, 0)
         for vertex in dda_8_pt:
+            if abs(i1[1] - i2[1]) == 0:
+                print("hit")
+                continue
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
 
     if line[0] == 'tri':
