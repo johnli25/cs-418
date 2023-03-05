@@ -95,7 +95,9 @@ function draw2() {
 }
 
 function draw3() {
-    gl.clear(gl.COLOR_BUFFER_BIT) 
+    // gl.clearColor(1, 0.373, 0.02, 1)
+    // gl.clear(gl.COLOR_BUFFER_BIT) 
+    window.pending = requestAnimationFrame(draw3)
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
@@ -126,6 +128,7 @@ async function setup(event) {
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
     compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
+    console.log(data)
     window.geom = setupGeomery(data)
 }
 
