@@ -11,7 +11,7 @@ def cross_product(i1, i2, i3): # cull
 
 def clip_plane(p1, p2):
     dot = np.dot(p1, p2)
-    # print("dot,", dot)
+    print("dot,", dot)
     return True if dot >= 0 else False
 
 def srgb_to_linear(srgb):
@@ -38,7 +38,6 @@ def linear_to_srgb(lin):
 
 def cull_edge_check(image, dda_rest):
     for i,j in zip(range(19, 66), range(20, 113, 2)): # x-coord
-            # print("i and j: ", i, j)
             image.im.putpixel((i, j), (round(dda_rest[0][2]), round(dda_rest[0][3]), round(dda_rest[0][4]), 255))
 
 def blend_rgba(srgb_lin):

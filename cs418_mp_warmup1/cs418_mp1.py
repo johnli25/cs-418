@@ -84,24 +84,19 @@ for line in txt_input_clean:
             y = copy.deepcopy(v[1])
             z = copy.deepcopy(v[-2])
             w = copy.deepcopy(v[-1])
-            # print("xyzw", x, y, z, w)
             v[0] = (x / w + 1) * width / 2
             v[1] = (y / w + 1) * height / 2
 
-        # if abs(i1[0] - i2[0]) > abs(i1[1] > i2[1]):
         dda_8_ptx = otherFunc.ddax_line(i1, i2)
         for vertex in dda_8_ptx:
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
-        # else:
         dda_8_pt = dda.dday(i1, i2, 0)
         for vertex in dda_8_pt:
             if abs(i1[1] - i2[1]) == 0:
-                print("hit")
                 continue
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
 
     if line[0] == 'tri':
-        # xyzw_list.append(np.array([x_xywz, y_xywz, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], z, w]))
         tmp_cnt += 1
         if int(line[1]) < 0:
             i1 = copy.deepcopy(xyzw_list[int(line[1])])
