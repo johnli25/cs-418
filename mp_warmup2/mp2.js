@@ -114,22 +114,25 @@ const m4rotX = (ang) => { // around x axis
     return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
 }
 
-function draw3() {
+function draw3(milliseconds) {
     // gl.clearColor(1, 0.373, 0.02, 1)
     // gl.clear(gl.COLOR_BUFFER_BIT) 
     gl.useProgram(program)
-    // let rot_mat = m4rotX(3.14)
-    let rot_mat = new Float32Array([1,0,0,0,
-                      0,0,0,0,
-                      0,0,0,0,
-                      0,0,0,0])
-    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
-    gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
+    let rot_mat = m4rotX(3.14)
+    console.log(rot_mat)
+    // let rot_mat = new Float32Array([1,0,0,0,
+    //                   0,0,0,0,
+    //                   0,0,0,0,
+    //                   0,0,0,0])
+    let matrixBindPoints = gl.getUniformLocation(program, 'seconds') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniform1f(matrixBindPoints, milliseconds/1000)
+    // gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
 
     window.pending = requestAnimationFrame(draw3)
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
+    requestAnimationFrame(draw3)
 }
 
 /** Callback for when the radio button selection changes */
@@ -159,6 +162,7 @@ async function setup(event) {
     let data = await fetch('illini.json').then(r=>r.json())
     console.log(data)
     window.geom = setupGeometry(data)
+    // requestAnimationFrame(draw3)
 }
 
 /**
