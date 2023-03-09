@@ -25,7 +25,22 @@ function compileAndLinkGLSL(vs_source, fs_source) {
     }
 }
 
-function setupGeomery(geom) {
+function supplyDataBuffer(data, program, vsIn, mode) {
+    if (mode === undefined) mode = gl.STATIC_DRAW
+    
+    let buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    let f32 = new Float32Array(data.flat())
+    gl.bufferData(gl.ARRAY_BUFFER, f32, mode)
+    
+    let loc = gl.getAttribLocation(program, vsIn)
+    gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(loc)
+    
+    return buf;
+}
+
+function setupGeometry(geom) {
     // a "vertex array object" or VAO records various data provision commands
     var triangleArray = gl.createVertexArray()
     gl.bindVertexArray(triangleArray)
@@ -94,9 +109,23 @@ function draw2() {
     window.pending = requestAnimationFrame(draw2)
 }
 
+const m4rotX = (ang) => { // around x axis
+    let c = Math.cos(ang), s = Math.sin(ang);
+    return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
+}
+
 function draw3() {
     // gl.clearColor(1, 0.373, 0.02, 1)
     // gl.clear(gl.COLOR_BUFFER_BIT) 
+    gl.useProgram(program)
+    // let rot_mat = m4rotX(3.14)
+    let rot_mat = new Float32Array([1,0,0,0,
+                      0,0,0,0,
+                      0,0,0,0,
+                      0,0,0,0])
+    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
+
     window.pending = requestAnimationFrame(draw3)
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
@@ -129,7 +158,7 @@ async function setup(event) {
     compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
     console.log(data)
-    window.geom = setupGeomery(data)
+    window.geom = setupGeometry(data)
 }
 
 /**

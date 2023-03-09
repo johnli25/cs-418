@@ -5,8 +5,10 @@ in vec4 color;
 
 out vec4 vColor;
 
-void main() {
+uniform mat4 rot_mat;
 
+void main() {
+    gl_Position = rot_mat * position;
     vColor = color;
-    gl_Position = position;
+    // gl_Position = position;
 }
