@@ -118,15 +118,11 @@ function draw3(milliseconds) {
     // gl.clearColor(1, 0.373, 0.02, 1)
     // gl.clear(gl.COLOR_BUFFER_BIT) 
     gl.useProgram(program)
-    let rot_mat = m4rotX(3.14)
+    let rot_mat = m4rotX(milliseconds)
     console.log(rot_mat)
-    // let rot_mat = new Float32Array([1,0,0,0,
-    //                   0,0,0,0,
-    //                   0,0,0,0,
-    //                   0,0,0,0])
-    let matrixBindPoints = gl.getUniformLocation(program, 'seconds') // getUniformLocation finds and allocates address space/location of variable
-    gl.uniform1f(matrixBindPoints, milliseconds/1000)
-    // gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
+    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
+    // gl.uniform1f(matrixBindPoints, milliseconds/1000)
+    gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
 
     window.pending = requestAnimationFrame(draw3)
     gl.useProgram(program)        // pick the shaders
