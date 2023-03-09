@@ -113,22 +113,30 @@ const m4rotX = (ang) => { // around x axis
     let c = Math.cos(ang), s = Math.sin(ang);
     return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
 }
+const m4rotY = (ang) => { // around y axis
+    let c = Math.cos(ang), s = Math.sin(ang);
+    return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]);
+}
+const m4rotZ = (ang) => { // around z axis
+    let c = Math.cos(ang), s = Math.sin(ang);
+    return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]);
+}
 
 function draw3(milliseconds) {
     // gl.clearColor(1, 0.373, 0.02, 1)
     // gl.clear(gl.COLOR_BUFFER_BIT) 
     gl.useProgram(program)
-    let rot_mat = m4rotX(milliseconds)
+    let rot_mat = m4rotZ(0.002 * milliseconds)
     console.log(rot_mat)
     let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
     // gl.uniform1f(matrixBindPoints, milliseconds/1000)
     gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
 
-    window.pending = requestAnimationFrame(draw3)
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
-    requestAnimationFrame(draw3)
+    // requestAnimationFrame(draw3)
+    window.pending = requestAnimationFrame(draw3)
 }
 
 /** Callback for when the radio button selection changes */
