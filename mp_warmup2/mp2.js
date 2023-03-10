@@ -1,4 +1,11 @@
 // import * as math from "./math.js";
+var vertexBufGlobal;
+
+function CPUVertexBased() {
+    let buf = gl.createBuffer();
+    vertexBufGlobal = buf
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal);
+}
 
 function compileAndLinkGLSL(vs_source, fs_source) {
     let vs = gl.createShader(gl.VERTEX_SHADER)
@@ -141,16 +148,17 @@ const m4mul = (...args) => args.reduce((m1,m2) => {
     return ans // m*m
 })
 
-function draw3(milliseconds) {
+function draw3(seconds) {
     // gl.clearColor(1, 0.373, 0.02, 1)
     // gl.clear(gl.COLOR_BUFFER_BIT) 
     gl.useProgram(program)
-    let rot_mat = m4rotZ(0.002 * milliseconds)
-    let scale_mat = m4scale(0.002 * milliseconds, 0.002 * milliseconds, 0.002 * milliseconds)
+    let rot_mat = m4rotZ(0.002 * seconds)
+    // let scale_mat = m4scale(0.002 * seconds, 0.002 * seconds, 0.002 * seconds)
+    // if ((seconds * 100) % 2 == 0)
+    let scale_mat = m4scale(1/(0.002 * seconds), 1/(0.002 * seconds), 1/(0.002 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
-    console.log(combined_mat)
+    console.log(scale_mat)
     let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
-    // gl.uniform1f(matrixBindPoints, milliseconds/1000)
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.useProgram(program)        // pick the shaders
