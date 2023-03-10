@@ -1,3 +1,5 @@
+// import * as math from "./math.js";
+
 function compileAndLinkGLSL(vs_source, fs_source) {
     let vs = gl.createShader(gl.VERTEX_SHADER)
     gl.shaderSource(vs, vs_source)
@@ -122,20 +124,38 @@ const m4rotZ = (ang) => { // around z axis
     return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]);
 }
 
+const m4trans = (dx,dy,dz) => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, dx,dy,dz,1])
+
+const m4scale = (sx,sy,sz) => new Float32Array([sx,0,0,0, 0,sy,0,0, 0,0,sz,0, 0,0,0,1])
+
+const m4row = (m,r) => new m.constructor(4).map((e,i)=>m[r+4*i])
+const m4rowdot = (m,r,v) => m[r]*v[0] + m[r+4]*v[1] + m[r+8]*v[2] + m[r+12]*v[3]
+const m4col = (m,c) => m.slice(c*4,(c+1)*4)
+const m4transpose = (m) => m.map((e,i) => m[((i&3)<<2)+(i>>2)])
+const m4mul = (...args) => args.reduce((m1,m2) => {
+    if(m2.length == 4) return m2.map((e,i)=>m4rowdot(m1,i,m2)) // m*v
+    if(m1.length == 4) return m1.map((e,i)=>m4rowdot(m2,i,m1)) // v*m
+    let ans = new m1.constructor(16)
+    for(let c=0; c<4; c+=1) for(let r=0; r<4; r+=1)
+      ans[r+c*4] = m4rowdot(m1,r,m4col(m2,c))
+    return ans // m*m
+})
+
 function draw3(milliseconds) {
     // gl.clearColor(1, 0.373, 0.02, 1)
     // gl.clear(gl.COLOR_BUFFER_BIT) 
     gl.useProgram(program)
     let rot_mat = m4rotZ(0.002 * milliseconds)
-    console.log(rot_mat)
+    let scale_mat = m4scale(0.002 * milliseconds, 0.002 * milliseconds, 0.002 * milliseconds)
+    let combined_mat = m4mul(rot_mat, scale_mat)
+    console.log(combined_mat)
     let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
     // gl.uniform1f(matrixBindPoints, milliseconds/1000)
-    gl.uniformMatrix4fv(matrixBindPoints, false, rot_mat)
+    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
-    // requestAnimationFrame(draw3)
     window.pending = requestAnimationFrame(draw3)
 }
 
