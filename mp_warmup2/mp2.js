@@ -167,6 +167,14 @@ function draw2() {
     window.pending = requestAnimationFrame(draw2)
 }
 
+/**
+ * Miniature matrix math suite/library:
+ * multiple matrix/math functions, including rotation (x,y or z), multiplication, 
+ * dot product, translation, scaling, etc.
+ * @param {ang, dx, dy, dz, sx, sy, sz, m, r, args...}
+ *
+ * Fills the screen with Illini Blue
+ */
 const m4rotX = (ang) => { // around x axis
     let c = Math.cos(ang), s = Math.sin(ang);
     return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]);
