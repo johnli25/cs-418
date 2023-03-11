@@ -170,7 +170,7 @@ function draw2() {
 /**
  * Miniature matrix math suite/library:
  * multiple matrix/math functions, including rotation (x,y or z), multiplication, 
- * dot product, translation, scaling, etc.
+ * dot product, translation, scaling, transpose, row, dot product, etc.
  * @param {ang, dx, dy, dz, sx, sy, sz, m, r, args...}
  *
  * Fills the screen with Illini Blue
@@ -211,8 +211,6 @@ const m4mul = (...args) => args.reduce((m1,m2) => {
  * @param {seconds}
  */
 function draw3(seconds) {
-    // gl.clearColor(1, 0.373, 0.02, 1)
-    // gl.clear(gl.COLOR_BUFFER_BIT) 
     gl.useProgram(program)
     let rot_mat = m4rotZ(0.002 * seconds)
     // let scale_mat = m4scale(0.002 * seconds, 0.002 * seconds, 0.002 * seconds)
