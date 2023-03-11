@@ -1,12 +1,6 @@
 // import * as math from "./math.js";
 var vertexBufGlobal;
 
-function CPUVertexBased() {
-    let buf = gl.createBuffer();
-    vertexBufGlobal = buf
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal);
-}
-
 function compileAndLinkGLSL(vs_source, fs_source) {
     let vs = gl.createShader(gl.VERTEX_SHADER)
     gl.shaderSource(vs, vs_source)
@@ -47,6 +41,14 @@ function supplyDataBuffer(data, program, vsIn, mode) {
     gl.enableVertexAttribArray(loc)
     
     return buf;
+}
+
+function setupCPUVertexBased() {
+    let buf = gl.createBuffer()
+    vertexBufGlobal = buf
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
+    let f32 = new Float32Array(data.flat())
+    gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW);
 }
 
 function setupGeometry(geom) {
@@ -155,7 +157,7 @@ function draw3(seconds) {
     let rot_mat = m4rotZ(0.002 * seconds)
     // let scale_mat = m4scale(0.002 * seconds, 0.002 * seconds, 0.002 * seconds)
     // if ((seconds * 100) % 2 == 0)
-    let scale_mat = m4scale(1/(0.002 * seconds), 1/(0.002 * seconds), 1/(0.002 * seconds))
+    let scale_mat = m4scale(1/(0.001 * seconds), 1/(0.001 * seconds), 1/(0.001 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
     console.log(scale_mat)
     let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
@@ -165,6 +167,12 @@ function draw3(seconds) {
     gl.bindVertexArray(geom.vao)  // and the buffers
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw3)
+}
+
+function draw4() {
+    // gl.clear(gl.COLOR_BUFFER_BIT)
+    setupCPUVertexBased()
+    window.pending = requestAnimationFrame(draw4)
 }
 
 /** Callback for when the radio button selection changes */
