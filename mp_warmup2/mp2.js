@@ -232,9 +232,21 @@ function draw3(seconds) {
  *
  * Fills the screen with Illini Blue
  */
-function draw4() {
+function draw4(seconds) {
     // gl.clear(gl.COLOR_BUFFER_BIT)
-    // setupCPUVertexBased()
+    gl.useProgram(program)
+    let rot_mat = m4rotZ(0.002 * seconds)
+    // let scale_mat = m4scale(0.002 * seconds, 0.002 * seconds, 0.002 * seconds)
+    // if ((seconds * 100) % 2 == 0)
+    let scale_mat = m4scale(1/(0.0005 * seconds), 1/(0.0005 * seconds), 1/(0.0005 * seconds))
+    let combined_mat = m4mul(rot_mat, scale_mat)
+    // console.log(scale_mat)
+    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
+
+    gl.useProgram(program)        // pick the shaders
+    gl.bindVertexArray(geom.vao)  // and the buffers
+    gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw4)
 }
 
@@ -265,21 +277,9 @@ async function setup(event) {
     let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
     compileAndLinkGLSL(vs,fs)
+    let data = await fetch('illini.json').then(r=>r.json())
+    window.geom = setupGeometry(data)
 }
-
-/** asynchrounous setup: build data & waiting for and linking fragment and vertex WebGL shaders 
- * for CPU-based vertex animation only
- * @parameter {event}
-*/
-// async function setupCPU(event) {
-//     window.gl = document.querySelector('canvas').getContext('webgl2')
-//     let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
-//     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
-//     compileAndLinkGLSL(vs,fs)
-//     let data = await fetch('illini.json').then(r=>r.json())
-//     console.log(data)
-//     // window.geom = setupCPUVertexBased(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
-// }
 
 /**
  * Initializes WebGL and event handlers after page is fully loaded.
@@ -291,11 +291,10 @@ async function setup(event) {
 window.addEventListener('load',(event)=>{
     resizeCanvas()
     window.gl = document.querySelector('canvas').getContext('webgl2')
-    setup()
-    let data = fetch('illini.json').then(r=>r.json())
-    window.geom = setupGeometry(data)
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })
-    radioChanged()
+    chosen = radioChanged()
+    // console.log(chosen)
+    setup()
 })
