@@ -215,13 +215,8 @@ function draw3(seconds) {
     // console.log(scale_mat)
     let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
-
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
-    // gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
-    // let f32_vertex = new Float32Array(vertexBufGlobal.flat()) // and convert the data to a known fixed-sized type
-    // gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW) // then send that data to the GPU, with a hint that we do plan to change it very often
-
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
 
     window.pending = requestAnimationFrame(draw3)
@@ -247,6 +242,10 @@ function draw4(seconds) {
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(CPUgeom.vao)  // and the buffers
 
+    // gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
+    // let f32_vertex = new Float32Array(vertexBufGlobal.flat()) // and convert the data to a known fixed-sized type
+    // gl.bufferData(gl.ARRAY_BUFFER, f32_vertex, gl.DYNAMIC_DRAW) // then send that data to the GPU, with a hint that we do plan to change it very often
+    
     gl.drawElements(CPUgeom.mode, CPUgeom.count, CPUgeom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw4)
 }
