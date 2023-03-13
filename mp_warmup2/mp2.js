@@ -33,68 +33,6 @@ function compileAndLinkGLSL(vs_source, fs_source) {
     }
 }
 
-// function supplyDataBuffer(data, program, vsIn, mode) {
-//     if (mode === undefined) mode = gl.STATIC_DRAW
-    
-//     let buf = gl.createBuffer()
-//     gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-//     let f32 = new Float32Array(data.flat())
-//     gl.bufferData(gl.ARRAY_BUFFER, f32, mode)
-    
-//     let loc = gl.getAttribLocation(program, vsIn)
-//     gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
-//     gl.enableVertexAttribArray(loc)
-    
-//     return buf;
-// }
-
-/** optional part: setup ILLINI LOGO GEOMETRY for cpu-based vertex movement 
- * @param {geom}
-*/
-function setupCPUVertexBased(geom) {
-    var triangleArray = gl.createVertexArray()
-    gl.bindVertexArray(triangleArray)
-
-    // Object.entries({k1:v1, k2:v2}) returns [[k1,v1],[k2,v2]]
-    // [a, b, c].forEach(func) calls func(a), then func(b), then func(c)
-    Object.entries(geom.attributes).forEach(([name,data]) => {
-        // goal 1: get data from CPU memory to GPU memory 
-        // createBuffer allocates an array of GPU memory
-        let buf = gl.createBuffer()
-        // to get data into the array we tell the GPU which buffer to use
-        gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-        // and convert the data to a known fixed-sized type
-        let f32 = new Float32Array(data.flat())
-        // then send that data to the GPU, with a hint that we don't plan to change it very often
-        gl.bufferData(gl.ARRAY_BUFFER, f32, gl.STATIC_DRAW)
-        
-        // goal 2: connect the buffer to an input of the vertex shader
-        // this is done by finding the index of the given input name
-        let loc = gl.getAttribLocation(program, name)
-        // telling the GPU how to parse the bytes of the array
-        gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
-        // and connecting the currently-used array to the VS input
-        gl.enableVertexAttribArray(loc)
-    })
-
-    // We also have to explain how values are connected into shapes.
-    // There are other ways, but we'll use indices into the other arrays
-    var indices = new Uint16Array(geom.triangles.flat())
-    // we'll need a GPU array for the indices too
-    var indexBuffer = gl.createBuffer()
-    // but the GPU puts it in a different "ready" position, one for indices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
-
-    // we return all the bits we'll need to use this work later
-    // return {
-    //     mode:gl.TRIANGLES,      // grab 3 indices per triangle
-    //     count:indices.length,   // out of this many indices overall
-    //     type:gl.UNSIGNED_SHORT, // each index is stored as a Uint16
-    //     vao:triangleArray       // and this VAO knows which buffers to use
-    // }
-}
-
 /** set up geometry for required/part 1
  * @param {geom}
 */
@@ -133,6 +71,53 @@ function setupGeometry(geom) {
     // but the GPU puts it in a different "ready" position, one for indices
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
+
+    // we return all the bits we'll need to use this work later
+    return {
+        mode:gl.TRIANGLES,      // grab 3 indices per triangle
+        count:indices.length,   // out of this many indices overall
+        type:gl.UNSIGNED_SHORT, // each index is stored as a Uint16
+        vao:triangleArray       // and this VAO knows which buffers to use
+    }
+}
+
+/** optional part: setup ILLINI LOGO GEOMETRY for cpu-based vertex movement 
+ * @param {CPUgeom}
+*/
+function setupCPUVertexBased(CPUgeom) {
+    var triangleArray = gl.createVertexArray()
+    gl.bindVertexArray(triangleArray)
+
+    // Object.entries({k1:v1, k2:v2}) returns [[k1,v1],[k2,v2]]
+    // [a, b, c].forEach(func) calls func(a), then func(b), then func(c)
+    Object.entries(CPUgeom.attributes).forEach(([name,data]) => {
+        // goal 1: get data from CPU memory to GPU memory 
+        // createBuffer allocates an array of GPU memory
+        let buf = gl.createBuffer()
+        // to get data into the array we tell the GPU which buffer to use
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+        // and convert the data to a known fixed-sized type
+        let f32 = new Float32Array(data.flat())
+        // then send that data to the GPU, with a hint that we don't plan to change it very often
+        gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
+        
+        // goal 2: connect the buffer to an input of the vertex shader
+        // this is done by finding the index of the given input name
+        let loc = gl.getAttribLocation(program, name)
+        // telling the GPU how to parse the bytes of the array
+        gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
+        // and connecting the currently-used array to the VS input
+        gl.enableVertexAttribArray(loc)
+    })
+
+    // We also have to explain how values are connected into shapes.
+    // There are other ways, but we'll use indices into the other arrays
+    var indices = new Uint16Array(CPUgeom.triangles.flat())
+    // we'll need a GPU array for the indices too
+    var indexBuffer = gl.createBuffer()
+    // but the GPU puts it in a different "ready" position, one for indices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW)
 
     // we return all the bits we'll need to use this work later
     return {
@@ -235,7 +220,7 @@ function draw3(seconds) {
 function draw4(seconds) {
     // gl.clear(gl.COLOR_BUFFER_BIT)
     gl.useProgram(program)
-    let rot_mat = m4rotZ(0.002 * seconds)
+    let rot_mat = m4rotZ(-0.01 * seconds)
     // let scale_mat = m4scale(0.002 * seconds, 0.002 * seconds, 0.002 * seconds)
     // if ((seconds * 100) % 2 == 0)
     let scale_mat = m4scale(1/(0.0005 * seconds), 1/(0.0005 * seconds), 1/(0.0005 * seconds))
@@ -245,8 +230,8 @@ function draw4(seconds) {
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.useProgram(program)        // pick the shaders
-    gl.bindVertexArray(geom.vao)  // and the buffers
-    gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
+    gl.bindVertexArray(CPUgeom.vao)  // and the buffers
+    gl.drawElements(CPUgeom.mode, CPUgeom.count, CPUgeom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw4)
 }
 
@@ -256,7 +241,9 @@ function radioChanged() {
     cancelAnimationFrame(window.pending)
     if (chosen == 3)
         console.log("hi")
+        // setup()
     window.pending = requestAnimationFrame(window['draw'+chosen])
+    // setup()
 }
 
 /** Resizes the canvas to be a square that fits on the screen with at least 20% vertical padding */
@@ -279,6 +266,7 @@ async function setup(event) {
     compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
     window.geom = setupGeometry(data)
+    window.CPUgeom = setupCPUVertexBased(data)
 }
 
 /**
@@ -295,6 +283,6 @@ window.addEventListener('load',(event)=>{
         elem.addEventListener('change', radioChanged)
     })
     chosen = radioChanged()
-    // console.log(chosen)
     setup()
+    // console.log(chosen)
 })
