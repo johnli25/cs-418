@@ -94,11 +94,12 @@ function setupCPUVertexBased(CPUgeom) {
         // goal 1: get data from CPU memory to GPU memory 
         // createBuffer allocates an array of GPU memory
         let buf = gl.createBuffer()
+        vertexBufGlobal = buf
         // to get data into the array we tell the GPU which buffer to use
         gl.bindBuffer(gl.ARRAY_BUFFER, buf)
         // and convert the data to a known fixed-sized type
         let f32 = new Float32Array(data.flat())
-        // then send that data to the GPU, with a hint that we don't plan to change it very often
+        // then send that data to the GPU, with a hint that we do plan to change it very often
         gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
         
         // goal 2: connect the buffer to an input of the vertex shader
@@ -208,6 +209,7 @@ function draw3(seconds) {
 
     gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
+    
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw3)
 }
