@@ -95,7 +95,12 @@ function setupCPUVertexBased(CPUgeom) {
         // goal 1: get data from CPU memory to GPU memory 
         // createBuffer allocates an array of GPU memory
         let buf = gl.createBuffer()
-        vertexBufGlobal = buf
+        if (name == "position")
+            vertexBufGlobal = buf
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
+        if (name == "color")
+            colorBufGlobal = buf
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBufGlobal)
         // to get data into the array we tell the GPU which buffer to use
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
         // and convert the data to a known fixed-sized type
