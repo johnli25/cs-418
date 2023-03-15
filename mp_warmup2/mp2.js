@@ -2,6 +2,7 @@
 
 /** @global global vertex buffer CPU-based vertex movement */
 var vertexBufGlobal;
+var chosen;
 
 /** compiles and links GLSL to rest of program and graphics 
  * @param {vs_source, fs_source}
@@ -32,21 +33,6 @@ function compileAndLinkGLSL(vs_source, fs_source) {
         throw Error("Linking failed")
     }
 }
-
-// function supplyDataBuffer(data, program, vsIn, mode) {
-//     if (mode === undefined) mode = gl.STATIC_DRAW
-    
-//     let buf = gl.createBuffer()
-//     gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-//     let f32 = new Float32Array(data.flat())
-//     gl.bufferData(gl.ARRAY_BUFFER, f32, mode)
-    
-//     let loc = gl.getAttribLocation(program, vsIn)
-//     gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
-//     gl.enableVertexAttribArray(loc)
-    
-//     return buf;
-// }
 
 /** optional part: setup ILLINI LOGO GEOMETRY for cpu-based vertex movement 
  * @param {geom}
@@ -168,12 +154,10 @@ function draw2() {
 }
 
 /**
- * Miniature matrix math suite/library:
+ * Matrix math suite/library:
  * multiple matrix/math functions, including rotation (x,y or z), multiplication, 
  * dot product, translation, scaling, transpose, row, dot product, etc.
  * @param {ang, dx, dy, dz, sx, sy, sz, m, r, args...}
- *
- * Fills the screen with Illini Blue
  */
 const m4rotX = (ang) => { // around x axis
     let c = Math.cos(ang), s = Math.sin(ang);
@@ -207,7 +191,7 @@ const m4mul = (...args) => args.reduce((m1,m2) => {
 
 /**
  * Animation callback for the third display (required/part 1). See {draw1} for more.
- * Scaling/Shrinking + Rotation
+ * Scaling/Shrinking + Rotation around Z-axis
  * @param {seconds}
  */
 function draw3(seconds) {
@@ -227,12 +211,21 @@ function draw3(seconds) {
 
 /**
  * Animation callback for fourth display. See {draw1} for more.
- *
- * Fills the screen with Illini Blue
+ * Other, non-logo animation for part 1
+ * @param {seconds}
  */
-function draw4() {
-    // gl.clear(gl.COLOR_BUFFER_BIT)
-    // setupCPUVertexBased()
+function draw4(seconds) {
+    gl.useProgram(program)
+    let rot_mat = m4rotY(-0.005 * seconds)
+    let scale_mat = m4scale(-1/(0.001 * seconds), 1/(0.001 * seconds), -1/(0.001 * seconds))
+    let combined_mat = m4mul(rot_mat, scale_mat)
+    console.log(combined_mat)
+    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
+
+    gl.useProgram(program)        // pick the shaders
+    gl.bindVertexArray(geom.vao)  // and the buffers
+    gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw4)
 }
 
@@ -277,9 +270,10 @@ async function setupCPU(event) {
     let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
     compileAndLinkGLSL(vs,fs)
-    let data = await fetch('illini.json').then(r=>r.json())
+    let data = await fetch('illini2.json').then(r=>r.json())
     console.log(data)
-    // window.geom = setupCPUVertexBased(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    // window.othergeom = setupGeometry(data)
+    // window.CPUgeom = setupCPUVertexBased(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
 }
 
 /**
