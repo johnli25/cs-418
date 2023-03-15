@@ -261,17 +261,17 @@ async function setup(event) {
 }
 
 /** asynchrounous setup: build data & waiting for and linking fragment and vertex WebGL shaders 
- * for CPU-based vertex animation only
+ * for other animation in part 1
  * @parameter {event}
 */
-async function setupCPU(event) {
+async function setupOther(event) {
     window.gl = document.querySelector('canvas').getContext('webgl2')
     let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
     compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini2.json').then(r=>r.json())
     console.log(data)
-    // window.othergeom = setupGeometry(data)
+    window.geom = setupGeometry(data)
     // window.CPUgeom = setupCPUVertexBased(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
 }
 
@@ -285,8 +285,8 @@ async function setupCPU(event) {
 window.addEventListener('load',(event)=>{
     resizeCanvas()
     window.gl = document.querySelector('canvas').getContext('webgl2')
+    setupOther()
     setup()
-    setupCPU()
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })
