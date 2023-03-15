@@ -233,8 +233,7 @@ function draw4(seconds) {
 function radioChanged() {
     let chosen = document.querySelector('input[name="example"]:checked').value
     cancelAnimationFrame(window.pending)
-    if (chosen == 3)
-        console.log("hi")
+    console.log("Hi " + chosen)
     window.pending = requestAnimationFrame(window['draw'+chosen])
 }
 
