@@ -40,9 +40,6 @@ def cull_edge_check(image, dda_rest):
     for i,j in zip(range(19, 66), range(20, 113, 2)): # x-coord
             image.im.putpixel((i, j), (round(dda_rest[0][2]), round(dda_rest[0][3]), round(dda_rest[0][4]), 255))
 
-def blend_rgba(srgb_lin):
-    pass
-
 def ddax_line(coord1, coord2):
     output = []
     if (coord1[0] == coord2[0] and coord1[1] == coord2[1]):

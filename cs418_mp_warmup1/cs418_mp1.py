@@ -11,7 +11,7 @@ f = open(file_input, 'r')
 results = []
 results_name = []
 
-txt_input_clean = [] # is the list
+txt_input_clean = [] # list of list of strings (where each line represents inner list)
 image_name = ""
 
 ## clean data: strip whitespaces, commas, put into list, etc.
@@ -26,6 +26,7 @@ clipplane_cnt = 1
 sRGB_flag = False
 line_flag = False
 rgba_flag = False
+depth_flag = False
 
 width = 0
 height = 1
@@ -52,6 +53,7 @@ for line in txt_input_clean:
         image_name = line[3]
         alpha_buffer = np.zeros((width, height))
         rgb_buffer = np.zeros((width, height, 3))
+        depth_buffer = np.ones((width, height)) #initialize depth buffer
     if line[0] == 'xyzw':
         x = float(line[1])
         y = float(line[2])
@@ -124,7 +126,7 @@ for line in txt_input_clean:
             for vtx in [i1, i2, i3]:
                 # what to do with after checking clip_plane???
                 if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
-                    print("beging clip1")
+                    print("begin clip1")
                 # what to do with after checking clip_plane???
                 if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
                     print("begin clip2")
@@ -153,6 +155,16 @@ for line in txt_input_clean:
                 continue
             if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
                 continue
+            if depth_flag: # == True
+                z_depth = vertex_rest[-2]
+                w_depth = vertex_rest[-1]
+                new_depth = z_depth / w_depth
+                if new_depth >= depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
+                    # print("vertex's depth greater than current depth in buffer")
+                    continue # DO NOT update pixel
+                else:
+                    # print("vertex's depth less than current depth in buffer")
+                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = new_depth
             if sRGB_flag == True:
                 # srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
                 if rgba_flag == True:
@@ -202,8 +214,8 @@ for line in txt_input_clean:
         sRGB_flag = True
     if line[0] == "line":
         line_flag = True
-    # if line[0] == "rgba":
-    #     rgba_flag == True
+    if line[0] == "depth":
+        depth_flag = True
 
 results.append(image2)
 results_name.append(str(image_name))
