@@ -37,13 +37,13 @@ function compileAndLinkGLSL(vs_source, fs_source) {
 /** optional part: setup ILLINI LOGO GEOMETRY for cpu-based vertex movement 
  * @param {geom}
 */
-function setupCPUVertexBased(geom) {
+function setupGeometryOther(geomOther) {
     var triangleArray = gl.createVertexArray()
     gl.bindVertexArray(triangleArray)
 
     // Object.entries({k1:v1, k2:v2}) returns [[k1,v1],[k2,v2]]
     // [a, b, c].forEach(func) calls func(a), then func(b), then func(c)
-    Object.entries(geom.attributes).forEach(([name,data]) => {
+    Object.entries(geomOther.attributes).forEach(([name,data]) => {
         // goal 1: get data from CPU memory to GPU memory 
         // createBuffer allocates an array of GPU memory
         let buf = gl.createBuffer()
@@ -65,7 +65,7 @@ function setupCPUVertexBased(geom) {
 
     // We also have to explain how values are connected into shapes.
     // There are other ways, but we'll use indices into the other arrays
-    var indices = new Uint16Array(geom.triangles.flat())
+    var indices = new Uint16Array(geomOther.triangles.flat())
     // we'll need a GPU array for the indices too
     var indexBuffer = gl.createBuffer()
     // but the GPU puts it in a different "ready" position, one for indices
@@ -73,12 +73,12 @@ function setupCPUVertexBased(geom) {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
 
     // we return all the bits we'll need to use this work later
-    // return {
-    //     mode:gl.TRIANGLES,      // grab 3 indices per triangle
-    //     count:indices.length,   // out of this many indices overall
-    //     type:gl.UNSIGNED_SHORT, // each index is stored as a Uint16
-    //     vao:triangleArray       // and this VAO knows which buffers to use
-    // }
+    return {
+        mode:gl.TRIANGLES,      // grab 3 indices per triangle
+        count:indices.length,   // out of this many indices overall
+        type:gl.UNSIGNED_SHORT, // each index is stored as a Uint16
+        vao:triangleArray       // and this VAO knows which buffers to use
+    }
 }
 
 /** set up geometry for required/part 1
@@ -224,8 +224,8 @@ function draw4(seconds) {
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.useProgram(program)        // pick the shaders
-    gl.bindVertexArray(geom.vao)  // and the buffers
-    gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
+    gl.bindVertexArray(geomOther.vao)  // and the buffers
+    gl.drawElements(geomOther.mode, geomOther.count, geomOther.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw4)
 }
 
@@ -271,8 +271,8 @@ async function setupOther(event) {
     compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini2.json').then(r=>r.json())
     console.log(data)
-    window.geom = setupGeometry(data)
-    // window.CPUgeom = setupCPUVertexBased(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    // window.geom = setupGeometry(data)
+    window.geomOther = setupGeometryOther(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
 }
 
 /**
