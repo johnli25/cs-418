@@ -200,7 +200,7 @@ function draw3(seconds) {
     let scale_mat = m4scale(1/(0.001 * seconds), 1/(0.001 * seconds), 1/(0.001 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
     console.log(combined_mat)
-    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
+    let matrixBindPoints = gl.getUniformLocation(program, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.useProgram(program)        // pick the shaders
@@ -220,7 +220,7 @@ function draw4(seconds) {
     let scale_mat = m4scale(-1/(0.001 * seconds), 1/(0.001 * seconds), -1/(0.001 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
     console.log(combined_mat)
-    let matrixBindPoints = gl.getUniformLocation(program, 'rot_mat') // getUniformLocation finds and allocates address space/location of variable
+    let matrixBindPoints = gl.getUniformLocation(program, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.useProgram(program)        // pick the shaders
