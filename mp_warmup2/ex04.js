@@ -25,7 +25,7 @@ function compileAndLinkGLSL(vs_source, fs_source) {
     }
 }
 
-function setupGeomery(geom) {
+function setupGeometry(geom) {
     var triangleArray = gl.createVertexArray()
     gl.bindVertexArray(triangleArray)
 
@@ -53,6 +53,34 @@ function setupGeomery(geom) {
     }
 }
 
+function setupGeometryGPU(GPUgeom) {
+    var triangleArray = gl.createVertexArray()
+    gl.bindVertexArray(triangleArray)
+
+    Object.entries(GPUgeom.attributes).forEach(([name,data]) => {
+        let buf = gl.createBuffer()
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+        let f32 = new Float32Array(data.flat())
+        gl.bufferData(gl.ARRAY_BUFFER, f32, gl.STATIC_DRAW)
+        
+        let loc = gl.getAttribLocation(program, name)
+        gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
+        gl.enableVertexAttribArray(loc)
+    })
+
+    var indices = new Uint16Array(GPUgeom.triangles.flat())
+    var indexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
+
+    return {
+        mode: gl.TRIANGLES,
+        count: indices.length,
+        type: gl.UNSIGNED_SHORT,
+        vao: triangleArray
+    }
+}
+
 function draw1() {
     gl.clearColor(1, 0.373, 0.02, 1)
     gl.clear(gl.COLOR_BUFFER_BIT)
@@ -67,8 +95,8 @@ function draw2(milliseconds) {
     let secondsBindPoint = gl.getUniformLocation(program, 'seconds')
     gl.uniform1f(secondsBindPoint, milliseconds/1000)
     
-    gl.bindVertexArray(geom.vao)
-    gl.drawElements(geom.mode, geom.count, geom.type, 0)
+    gl.bindVertexArray(GPUgeom.vao)
+    gl.drawElements(GPUgeom.mode, GPUgeom.count, GPUgeom.type, 0)
     
     // requestAnimationFrame calls its callback at as close to your screen's refresh rate as it can manage; its argument is a number of milliseconds that have elapsed since the page was first loaded.
     window.pending = requestAnimationFrame(draw2)
@@ -105,18 +133,21 @@ const m4mul = (...args) => args.reduce((m1,m2) => {
 })
 
 function draw3(milliseconds){
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    // gl.clear(gl.COLOR_BUFFER_BIT)
+    console.log("yo")
+    gl.useProgram(program)        // pick the shaders
+    gl.bindVertexArray(geom.vao)  // and the buffers
+    gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
+    window.pending = requestAnimationFrame(draw3)
 }
 
 /** Callback for when the radio button selection changes */
 function radioChanged() {
     let chosen = document.querySelector('input[name="example"]:checked').value
     cancelAnimationFrame(window.pending)
-    if (chosen == 3)
-        console.log("hi")
-        // setup()
+    // if (chosen == 3)
+    console.log(chosen + " hi")
     window.pending = requestAnimationFrame(window['draw'+chosen])
-    // setup()
 }
 
 /** Resizes the canvas to be a square that fits on the screen with at least 20% vertical padding */
@@ -131,21 +162,30 @@ function resizeCanvas() {
 
 async function setup(event) {
     window.gl = document.querySelector('canvas').getContext('webgl2')
+    let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
+    let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
+    compileAndLinkGLSL(vs,fs)
+    let data2 = await fetch('illini2.json').then(r=>r.json())
+    window.geom = setupGeometry(data2)
+}
+
+async function setupGPU(event) {
+    window.gl = document.querySelector('canvas').getContext('webgl2')
     let vs = await fetch('ex04-vertex.glsl').then(res => res.text())
     let fs = await fetch('ex04-fragment.glsl').then(res => res.text())
     compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
-    window.geom = setupGeomery(data)
-    // requestAnimationFrame(draw3)
+    window.GPUgeom = setupGeometryGPU(data)
 }
 
 window.addEventListener('load',(event)=>{
     resizeCanvas()
     setup()
+    setupGPU()
     window.gl = document.querySelector('canvas').getContext('webgl2')
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })
-    radioChanged()
+    let chosen = radioChanged()
 })
 
