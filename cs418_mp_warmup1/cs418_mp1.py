@@ -27,6 +27,7 @@ sRGB_flag = False
 line_flag = False
 rgba_flag = False
 depth_flag = False
+point_flag = False
 
 width = 0
 height = 1
@@ -59,8 +60,12 @@ for line in txt_input_clean:
         y = float(line[2])
         z = float(line[3])
         w = float(line[4])
-        xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
-        xyzw_list = copy.deepcopy(xyzw_list_orig)
+        if depth_flag:
+            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
+            xyzw_list = copy.deepcopy(xyzw_list_orig)
+        else:
+            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
+            xyzw_list = copy.deepcopy(xyzw_list_orig)
         # print("current rgb color", current_rgb_color)
         # print("xyzw list:", xyzw_list)
     if line[0] == 'rgb':
@@ -97,6 +102,26 @@ for line in txt_input_clean:
             if abs(i1[1] - i2[1]) == 0:
                 continue
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
+
+    if line[0] == "point":
+        pixel_wide = round(float(line[1]))
+        vertex_i = copy.deepcopy(xyzw_list[int(line[2])])
+        start_x = max(0, vertex_i[0] - pixel_wide / 2)
+        start_y = max(0, vertex_i[1] - pixel_wide / 2)
+        # print(current_rgb_color)
+        print("vertex: ", vertex_i)
+        x = copy.deepcopy(vertex_i[0])
+        y = copy.deepcopy(vertex_i[1])
+        # z = copy.deepcopy(v[-2])
+        w = copy.deepcopy(vertex_i[-1])
+        x = copy.deepcopy((x / w + 1) * width / 2)
+        y = copy.deepcopy((y / w + 1) * height / 2)
+        print("x and y: ", x, y)
+        for i in range(pixel_wide):
+            for i in range(pixel_wide):
+                print(width)
+                print(height)
+                image2.im.putpixel((round(x) - 1, round(y) - 1), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
 
     if line[0] == 'tri':
         tmp_cnt += 1
@@ -216,6 +241,7 @@ for line in txt_input_clean:
         line_flag = True
     if line[0] == "depth":
         depth_flag = True
+    # print(len(xyzw_list))
 
 results.append(image2)
 results_name.append(str(image_name))
