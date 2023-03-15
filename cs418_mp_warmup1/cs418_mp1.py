@@ -119,8 +119,6 @@ for line in txt_input_clean:
         print("x and y: ", x, y)
         for i in range(pixel_wide):
             for i in range(pixel_wide):
-                print(width)
-                print(height)
                 image2.im.putpixel((round(x) - 1, round(y) - 1), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
 
     if line[0] == 'tri':
@@ -184,7 +182,7 @@ for line in txt_input_clean:
                 z_depth = vertex_rest[-2]
                 w_depth = vertex_rest[-1]
                 new_depth = z_depth / w_depth
-                if new_depth >= depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
+                if new_depth > depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
                     # print("vertex's depth greater than current depth in buffer")
                     continue # DO NOT update pixel
                 else:
