@@ -61,6 +61,7 @@ for line in txt_input_clean:
         z = float(line[3])
         w = float(line[4])
         if depth_flag:
+            d = copy.deepcopy(z/w)
             xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
             xyzw_list = copy.deepcopy(xyzw_list_orig)
         else:
@@ -166,6 +167,9 @@ for line in txt_input_clean:
         dda1 = dda.dday(i1, i2, 2)
         dda2 = dda.dday(i1, i3, 2)
         dda3 = dda.dday(i2, i3, 2) 
+        print("1 ", i1)
+        print("2 ", i2)
+        print("3 ", i3)
 
         # actual drawing part
         dda_rest = dda.ddax(dda1, dda2, dda3, 0)

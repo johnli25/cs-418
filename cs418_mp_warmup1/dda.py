@@ -16,7 +16,7 @@ def ddax_edge_case(coord1, coord2):
 
     s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
     e = math.ceil(coord1[0]) - coord1[0]
-    o = (e * s[0]) # , e * s[1], e * s[2], e * s[3], e * s[4])
+    o = (e * s[0])
     p = list(coord1)
     p[0] += o
     while(p[0] < coord2[0]):
@@ -53,6 +53,7 @@ def dday(coord1, coord2, dim):
     p[6] += o[6]
     p[7] += o[7]
     while(p[1] < coord2[1]):
+        # print('pow')
         curr_p = copy.deepcopy(p)
         output.append(curr_p)
         p[0] += s[0]
