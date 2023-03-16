@@ -105,22 +105,21 @@ for line in txt_input_clean:
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
 
     if line[0] == "point":
-        pixel_wide = round(float(line[1]))
+        pixel_wide = copy.deepcopy(round(float(line[1])))
         vertex_i = copy.deepcopy(xyzw_list[int(line[2])])
-        start_x = max(0, vertex_i[0] - pixel_wide / 2)
-        start_y = max(0, vertex_i[1] - pixel_wide / 2)
         # print(current_rgb_color)
         print("vertex: ", vertex_i)
-        x = copy.deepcopy(vertex_i[0])
-        y = copy.deepcopy(vertex_i[1])
-        # z = copy.deepcopy(v[-2])
         w = copy.deepcopy(vertex_i[-1])
-        x = copy.deepcopy((x / w + 1) * width / 2)
-        y = copy.deepcopy((y / w + 1) * height / 2)
-        print("x and y: ", x, y)
-        for i in range(pixel_wide):
-            for i in range(pixel_wide):
-                image2.im.putpixel((round(x) - 1, round(y) - 1), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
+        x = copy.deepcopy((vertex_i[0] / w + 1) * width / 2)
+        y = copy.deepcopy((vertex_i[1] / w + 1) * height / 2)
+        start_x = max(0, round(x - pixel_wide / 2))
+        start_y = max(0, round(y - pixel_wide / 2))
+        print("x and y: ", start_x, start_y)
+        x_upper = min(start_x + pixel_wide, width)
+        y_upper = min(start_y + pixel_wide, height)
+        for i in range(start_x, x_upper):
+            for j in range(start_y, y_upper):
+                image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
 
     if line[0] == 'tri':
         tmp_cnt += 1
@@ -167,9 +166,9 @@ for line in txt_input_clean:
         dda1 = dda.dday(i1, i2, 2)
         dda2 = dda.dday(i1, i3, 2)
         dda3 = dda.dday(i2, i3, 2) 
-        print("1 ", i1)
-        print("2 ", i2)
-        print("3 ", i3)
+        # print("1 ", i1)
+        # print("2 ", i2)
+        # print("3 ", i3)
 
         # actual drawing part
         dda_rest = dda.ddax(dda1, dda2, dda3, 0)
