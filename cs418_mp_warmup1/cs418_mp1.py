@@ -256,7 +256,6 @@ for line in txt_input_clean:
         line_flag = True
     if line[0] == "depth":
         depth_flag = True
-    # print(len(xyzw_list))
 
 results.append(image2)
 results_name.append(str(image_name))
