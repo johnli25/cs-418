@@ -105,24 +105,38 @@ for line in txt_input_clean:
             image2.im.putpixel((round(vertex[0]), round(vertex[1])), (round(vertex[2]), round(vertex[3]), round(vertex[4]), 255))
 
     if line[0] == "point":
-        pixel_wide = copy.deepcopy(round(float(line[1])))
+        # if tmp_cnt > 7:
+        #     continue
+        pixel_wide = copy.deepcopy(float(line[1]))
         vertex_i = copy.deepcopy(xyzw_list[int(line[2])])
         # print(current_rgb_color)
-        print("vertex: ", vertex_i)
+        # print("vertex: ", vertex_i)
         w = copy.deepcopy(vertex_i[-1])
         x = copy.deepcopy((vertex_i[0] / w + 1) * width / 2)
         y = copy.deepcopy((vertex_i[1] / w + 1) * height / 2)
-        start_x = max(0, round(x - pixel_wide / 2))
-        start_y = max(0, round(y - pixel_wide / 2))
-        print("x and y: ", start_x, start_y)
-        x_upper = min(start_x + pixel_wide, width)
-        y_upper = min(start_y + pixel_wide, height)
+        start_x = max(0, math.ceil(x - pixel_wide / 2))
+        start_y = max(0, math.ceil(y - pixel_wide / 2))
+        # print("x and y: ", start_x, start_y)
+        x_upper = min(math.ceil(x + pixel_wide / 2), width)
+        y_upper = min(math.ceil(y + pixel_wide / 2), height)
         for i in range(start_x, x_upper):
             for j in range(start_y, y_upper):
+                z = vertex_i[-2]
+                new_d = z / w
+                if new_d > depth_buffer[round(i)][round(j)]:
+                    continue # DO NOT update pixel
+                else:
+                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = new_d
                 image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
+        # if tmp_cnt == 3 or tmp_cnt == 7 or tmp_cnt == 5:
+        #     print("pixel_wide ", pixel_wide)
+        #     print("x and y: ", x, y)
+        #     print("start", start_x, start_y)
+        #     print("upper", x_upper-1, y_upper-1)
+
+        tmp_cnt += 1
 
     if line[0] == 'tri':
-        tmp_cnt += 1
         if int(line[1]) < 0:
             i1 = copy.deepcopy(xyzw_list[int(line[1])])
         else:
