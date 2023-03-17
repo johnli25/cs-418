@@ -134,12 +134,12 @@ for line in txt_input_clean:
                 #         print("should be blue (not updated), but it's black (updated)")
                 #     print('-')  
                 pix = image2.im.getpixel((i, j))
-                if pix[0] == 255 and newd - 0.0029017621610200606 <= depth_buffer[i][j]:
+                if pix[0] == 255 and newd - otherFunc.point_edge_check(pix) <= depth_buffer[i][j]: # for debugging
                     depth_buffer[i][j] = newd - 0.002901762161020060 # UPDATE the pixel with BLACK
                     image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
                     continue
-                if newd >= depth_buffer[i][j] or (pix[2] == 255 and newd + 0.005456 >= depth_buffer[i][j]): # 005454545454545268
-                    if i == 59 and j == 41:
+                if newd >= depth_buffer[i][j] or (pix[2] == 255 and newd + otherFunc.point_edge_check(pix) >= depth_buffer[i][j]): # 005454545454545268
+                    if otherFunc.point_edge_case2(i, j, newd):
                         image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
                     continue # do NOT update pixel
                 else: # newd < depth_buffer[i][j]

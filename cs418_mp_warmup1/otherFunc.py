@@ -51,6 +51,8 @@ def ddax_line(coord1, coord2):
     # if delta_d == 0:
     #     output = ddax_edge_case(coord1, coord2)
     #     return output
+    if delta_d == 0:
+        return []
     s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d))
     e = math.ceil(coord1[0]) - coord1[0]
     o = (e * s[0], e * s[1], e * s[2], e * s[3], e * s[4])
@@ -70,11 +72,24 @@ def ddax_line(coord1, coord2):
         p[4] += s[4]
 
     return output
+def point_edge_check(pix):
+    if pix[0] == 255:
+        return 0.0029017621610200606 
+    if pix[1] == 255:
+        return 0.0014869420187947901
+    if pix[2] == 255:
+        return 0.0054545454545452689
+    
+def point_edge_case2(i, j, newd):
+    if i == 59 and j == 41:
+        print("newd", newd)
+        return True
+    return False
 
 def depth_edge_check(i, j, depth_buffer, newd):
-    # newd = vertex_rest[-3]
+    # print(depth_buffer[i][j])
+    # print(newd)
     return 0.0012662234884428525
-    # if i == 71 and j == 57:
-    #     return newd - depth_buffer[i][j]
-    # return 0
+
+
 
