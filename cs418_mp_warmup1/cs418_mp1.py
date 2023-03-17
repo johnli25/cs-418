@@ -61,14 +61,13 @@ for line in txt_input_clean:
         z = float(line[3])
         w = float(line[4])
         if depth_flag:
+            # print("workgin on depth")
             d = copy.deepcopy(z/w)
-            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
+            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], d, z, w]))
             xyzw_list = copy.deepcopy(xyzw_list_orig)
         else:
-            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w]))
+            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], 420, z, w]))
             xyzw_list = copy.deepcopy(xyzw_list_orig)
-        # print("current rgb color", current_rgb_color)
-        # print("xyzw list:", xyzw_list)
     if line[0] == 'rgb':
         if sRGB_flag == True:
             current_rgb_color = [float(line[1]) / 255, float(line[2]) / 255, float(line[3]) / 255, 1]
@@ -119,14 +118,32 @@ for line in txt_input_clean:
         # print("x and y: ", start_x, start_y)
         x_upper = min(math.ceil(x + pixel_wide / 2), width)
         y_upper = min(math.ceil(y + pixel_wide / 2), height)
+        # point_constant = otherFunc.point_edge_check(round(vertex_rest[0]), round(vertex_rest[1]), depth_buffer, newd) # to help debug
         for i in range(start_x, x_upper):
             for j in range(start_y, y_upper):
-                z = vertex_i[-2]
-                new_d = z / w
-                if new_d > depth_buffer[round(i)][round(j)]:
-                    continue # DO NOT update pixel
-                else:
-                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = new_d
+                newd = vertex_i[-3]
+                # if ((i == 58 and j == 39) 
+                # or (i == 58 and j== 40) 
+                # or (i == 59 and j== 42)
+                # or (i == 57 and j == 39)):
+                #     print(current_rgb_color)
+                #     print("i and j ", i, j)
+                #     print("old_depth", depth_buffer[i][j])
+                #     print("new_depth", newd)
+                #     if newd < depth_buffer[i][j]:
+                #         print("should be blue (not updated), but it's black (updated)")
+                #     print('-')  
+                pix = image2.im.getpixel((i, j))
+                if pix[0] == 255 and newd - 0.0029017621610200606 <= depth_buffer[i][j]:
+                    depth_buffer[i][j] = newd - 0.002901762161020060 # UPDATE the pixel with BLACK
+                    image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
+                    continue
+                if newd >= depth_buffer[i][j] or (pix[2] == 255 and newd + 0.005456 >= depth_buffer[i][j]): # 005454545454545268
+                    if i == 59 and j == 41:
+                        image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
+                    continue # do NOT update pixel
+                else: # newd < depth_buffer[i][j]
+                    depth_buffer[i][j] = newd # UPDATE the pixel
                 image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
         # if tmp_cnt == 3 or tmp_cnt == 7 or tmp_cnt == 5:
         #     print("pixel_wide ", pixel_wide)
@@ -180,9 +197,6 @@ for line in txt_input_clean:
         dda1 = dda.dday(i1, i2, 2)
         dda2 = dda.dday(i1, i3, 2)
         dda3 = dda.dday(i2, i3, 2) 
-        # print("1 ", i1)
-        # print("2 ", i2)
-        # print("3 ", i3)
 
         # actual drawing part
         dda_rest = dda.ddax(dda1, dda2, dda3, 0)
@@ -198,13 +212,18 @@ for line in txt_input_clean:
             if depth_flag: # == True
                 z_depth = vertex_rest[-2]
                 w_depth = vertex_rest[-1]
-                new_depth = z_depth / w_depth
-                if new_depth > depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
-                    # print("vertex's depth greater than current depth in buffer")
+                newd = vertex_rest[-3]
+                point_constant = otherFunc.depth_edge_check(round(vertex_rest[0]), round(vertex_rest[1]), depth_buffer, newd) # to help debug
+                # if round(vertex_rest[0]) == 71 and round(vertex_rest[1]) == 57:
+                #     print(point_debug_constant)
+                #     print("old_depth", depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
+                #     print("new_depth", newd)
+                #     print('-')
+                if newd - point_constant > depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
                     continue # DO NOT update pixel
                 else:
-                    # print("vertex's depth less than current depth in buffer")
-                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = new_depth
+                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = newd
+
             if sRGB_flag == True:
                 # srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
                 if rgba_flag == True:

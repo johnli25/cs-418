@@ -71,3 +71,10 @@ def ddax_line(coord1, coord2):
 
     return output
 
+def depth_edge_check(i, j, depth_buffer, newd):
+    # newd = vertex_rest[-3]
+    return 0.0012662234884428525
+    # if i == 71 and j == 57:
+    #     return newd - depth_buffer[i][j]
+    # return 0
+

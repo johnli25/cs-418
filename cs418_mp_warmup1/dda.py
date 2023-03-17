@@ -33,16 +33,16 @@ def dday(coord1, coord2, dim):
     if (coord1[1] > coord2[1]):
         coord1, coord2 = coord2, coord1
     delta = (coord2[0] - coord1[0], coord2[1] - coord1[1], coord2[2] - coord1[2], coord2[3] - coord1[3], coord2[4] - coord1[4],
-             coord2[5] - coord1[5], coord2[6] - coord1[6], coord2[7] - coord1[7]) # tuple coords
+             coord2[5] - coord1[5], coord2[6] - coord1[6], coord2[7] - coord1[7], coord2[8] - coord1[8]) # tuple coords
     delta_d = coord2[1] - coord1[1] # y direction difference coords
     if delta_d == 0:
         output = ddax_edge_case(coord1, coord2)
         return output
 
     s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d),
-         (delta[5] / delta_d), (delta[6] / delta_d), (delta[7] / delta_d))
+         (delta[5] / delta_d), (delta[6] / delta_d), (delta[7] / delta_d), (delta[8] / delta_d))
     e = math.ceil(coord1[1]) - coord1[1]
-    o = (e * s[0], e * s[1], e * s[2], e * s[3], e * s[4], e * s[5], e * s[6], e * s[7])
+    o = (e * s[0], e * s[1], e * s[2], e * s[3], e * s[4], e * s[5], e * s[6], e * s[7], e * s[8])
     p = list(coord1)
     p[0] += o[0]
     p[1] += o[1]
@@ -52,6 +52,7 @@ def dday(coord1, coord2, dim):
     p[5] += o[5]
     p[6] += o[6]
     p[7] += o[7]
+    p[8] += o[8]
     while(p[1] < coord2[1]):
         # print('pow')
         curr_p = copy.deepcopy(p)
@@ -64,6 +65,7 @@ def dday(coord1, coord2, dim):
         p[5] += s[5]
         p[6] += s[6]
         p[7] += s[7]
+        p[8] += s[8]
 
     return output
 
@@ -93,12 +95,12 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         if (line1[i][0] > line2[i][0]):
             line1[i], line2[i] = line2[i], line1[i]
         delta = (line2[i][dim] - line1[i][dim], line2[i][1] - line1[i][1], line2[i][2] - line1[i][2], line2[i][3] - line1[i][3], line2[i][4] - line1[i][4],
-                 line2[i][5] - line1[i][5], line2[i][6] - line1[i][6], line2[i][7] - line1[i][7]) # tuple coords
+                 line2[i][5] - line1[i][5], line2[i][6] - line1[i][6], line2[i][7] - line1[i][7], line2[i][8] - line1[i][8]) # tuple coords
         delta_d = line2[i][dim] - line1[i][dim] # x direction difference coords
         if delta_d == 0:
             continue
         s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d),
-             (delta[5] / delta_d), (delta[6] / delta_d), (delta[7] / delta_d))
+             (delta[5] / delta_d), (delta[6] / delta_d), (delta[7] / delta_d), (delta[8] / delta_d))
         e = (math.ceil(line1[i][dim]) - line1[i][dim],
              math.ceil(line1[i][1]) - line1[i][1],
              math.ceil(line1[i][2]) - line1[i][2],
@@ -106,9 +108,10 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
              math.ceil(line1[i][4]) - line1[i][4],
              math.ceil(line1[i][5]) - line1[i][5],
              math.ceil(line1[i][6]) - line1[i][6],
-             math.ceil(line1[i][7]) - line1[i][7])
+             math.ceil(line1[i][7]) - line1[i][7],
+             math.ceil(line1[i][8]) - line1[i][8])
         o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4], e[5] * s[5],
-             e[6] * s[6], e[7] * s[7])
+             e[6] * s[6], e[7] * s[7], e[8] * s[8])
         p = list(line1[i])
         p[0] += o[0]
         # p[1] += o[1] # DO NOT REMOVE! I MIGHT NEED THIS!
@@ -118,6 +121,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         p[5] += o[5]
         p[6] += o[6]
         p[7] += o[7]
+        p[8] += o[8]
         while(p[dim] < line2[i][dim]):
             curr_p = copy.deepcopy(p)
             p[0] += s[0]
@@ -128,6 +132,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             p[5] += s[5]
             p[6] += s[6]
             p[7] += s[7]
+            p[8] += s[8]
             if curr_p in coord1_list or curr_p in coord2_list or curr_p in coord3_list:
                 continue
             horiz_line_coords.append(curr_p)
@@ -152,12 +157,13 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         delta = (line3[i][dim] - line_extended[mid_offset + i][dim], line3[i][1] - line_extended[mid_offset + i][1],
                  line3[i][2] - line_extended[mid_offset + i][2], line3[i][3] - line_extended[mid_offset + i][3],
                  line3[i][4] - line_extended[mid_offset + i][4], line3[i][5] - line_extended[mid_offset + i][5],
-                 line3[i][6] - line_extended[mid_offset + i][6], line3[i][7] - line_extended[mid_offset + i][7]) # tuple coords
+                 line3[i][6] - line_extended[mid_offset + i][6], line3[i][7] - line_extended[mid_offset + i][7],
+                 line3[i][8] - line_extended[mid_offset + i][8]) # tuple coords
         delta_d = line3[i][dim] - line_extended[mid_offset + i][dim] # x direction difference coords
         if delta_d == 0:
             continue
         s = ((delta[0] / delta_d), (delta[1] / delta_d), (delta[2] / delta_d), (delta[3] / delta_d), (delta[4] / delta_d),
-             (delta[5] / delta_d), (delta[6] / delta_d), (delta[7] / delta_d))
+             (delta[5] / delta_d), (delta[6] / delta_d), (delta[7] / delta_d), (delta[8] / delta_d))
         e = (math.ceil(line_extended[mid_offset + i][dim]) - line_extended[mid_offset + i][dim], 
              math.ceil(line_extended[mid_offset + i][1]) - line_extended[mid_offset + i][1], 
              math.ceil(line_extended[mid_offset + i][2]) - line_extended[mid_offset + i][2], 
@@ -165,9 +171,10 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
              math.ceil(line_extended[mid_offset + i][4]) - line_extended[mid_offset + i][4],
              math.ceil(line_extended[mid_offset + i][5]) - line_extended[mid_offset + i][5], 
              math.ceil(line_extended[mid_offset + i][6]) - line_extended[mid_offset + i][6],
-             math.ceil(line_extended[mid_offset + i][7]) - line_extended[mid_offset + i][7])
+             math.ceil(line_extended[mid_offset + i][7]) - line_extended[mid_offset + i][7],
+             math.ceil(line_extended[mid_offset + i][8]) - line_extended[mid_offset + i][8])
         o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4], e[5] * s[5],
-             e[6] * s[6], e[7] * s[7])
+             e[6] * s[6], e[7] * s[7],  e[8] * s[8])
         p = line_extended[mid_offset + i]
         p[dim] += o[dim]
         p[1] += o[1]
@@ -177,6 +184,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
         p[5] += o[5]
         p[6] += o[6]
         p[7] += o[7]
+        p[8] += o[8]
         while(p[dim] < line3[i][dim]):
             curr_p = copy.deepcopy(p)
             horiz_line_coords.append(curr_p)
@@ -188,6 +196,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
             p[5] += s[5]
             p[6] += s[6]
             p[7] += s[7]
+            p[8] += s[8]
 
             if curr_p in coord1_list or curr_p in coord2_list or curr_p in coord3_list:
                 continue
