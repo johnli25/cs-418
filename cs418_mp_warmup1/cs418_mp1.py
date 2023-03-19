@@ -28,6 +28,7 @@ line_flag = False
 rgba_flag = False
 depth_flag = False
 point_flag = False
+hyp_flag = False
 
 width = 0
 height = 1
@@ -145,11 +146,6 @@ for line in txt_input_clean:
                 else: # newd < depth_buffer[i][j]
                     depth_buffer[i][j] = newd # UPDATE the pixel
                 image2.im.putpixel((i, j), (current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], 255))
-        # if tmp_cnt == 3 or tmp_cnt == 7 or tmp_cnt == 5:
-        #     print("pixel_wide ", pixel_wide)
-        #     print("x and y: ", x, y)
-        #     print("start", start_x, start_y)
-        #     print("upper", x_upper-1, y_upper-1)
 
         tmp_cnt += 1
 
@@ -209,21 +205,6 @@ for line in txt_input_clean:
                 continue
             if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
                 continue
-            if depth_flag: # == True
-                z_depth = vertex_rest[-2]
-                w_depth = vertex_rest[-1]
-                newd = vertex_rest[-3]
-                point_constant = otherFunc.depth_edge_check(round(vertex_rest[0]), round(vertex_rest[1]), depth_buffer, newd) # to help debug
-                # if round(vertex_rest[0]) == 71 and round(vertex_rest[1]) == 57:
-                #     print(point_debug_constant)
-                #     print("old_depth", depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
-                #     print("new_depth", newd)
-                #     print('-')
-                if newd - point_constant > depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
-                    continue # DO NOT update pixel
-                else:
-                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = newd
-
             if sRGB_flag == True:
                 # srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
                 if rgba_flag == True:
@@ -254,6 +235,21 @@ for line in txt_input_clean:
                 srgb_final = otherFunc.linear_to_srgb((vertex_rest[2], vertex_rest[3], vertex_rest[4]))
                 image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(srgb_final[0] * 255), round(srgb_final[1] * 255), round(srgb_final[2] * 255), round(vertex_rest[5] * 255)))
                 continue
+            if depth_flag: # == True
+                z_depth = vertex_rest[-2]
+                w_depth = vertex_rest[-1]
+                newd = vertex_rest[-3]
+                point_constant = otherFunc.depth_edge_check(round(vertex_rest[0]), round(vertex_rest[1]), depth_buffer, newd) # to help debug
+                # if round(vertex_rest[0]) == 71 and round(vertex_rest[1]) == 57:
+                #     print(point_debug_constant)
+                #     print("old_depth", depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])])
+                #     print("new_depth", newd)
+                #     print('-')
+                if newd - point_constant > depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])]:
+                    continue # DO NOT update pixel
+                else:
+                    depth_buffer[round(vertex_rest[0])][round(vertex_rest[1])] = newd
+
             image2.im.putpixel((round(vertex_rest[0]), round(vertex_rest[1])), (round(vertex_rest[2]), round(vertex_rest[3]), round(vertex_rest[4]), round(vertex_rest[5])))
 
         if cull_flag == True: # to help debug weird edge case occuring with cull
@@ -275,6 +271,8 @@ for line in txt_input_clean:
         line_flag = True
     if line[0] == "depth":
         depth_flag = True
+    if line[0] == "hyp":
+        hyp_flag = True
 
 results.append(image2)
 results_name.append(str(image_name))
