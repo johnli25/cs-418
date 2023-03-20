@@ -2,7 +2,7 @@
 
 /** @global global vertex buffer CPU-based vertex movement */
 var vertexBufGlobal;
-var chosen;
+// var chosen;
 
 /** compiles and links GLSL to rest of program and graphics 
  * @param {vs_source, fs_source}
@@ -24,7 +24,7 @@ function compileAndLinkGLSL(vs_source, fs_source) {
         throw Error("Fragment shader compilation failed")
     }
 
-    window.program = gl.createProgram()
+    let program = gl.createProgram()
     gl.attachShader(program, vs)
     gl.attachShader(program, fs)
     gl.linkProgram(program)
@@ -32,53 +32,7 @@ function compileAndLinkGLSL(vs_source, fs_source) {
         console.error(gl.getProgramInfoLog(program))
         throw Error("Linking failed")
     }
-}
-
-/** optional part: setup ILLINI LOGO GEOMETRY for cpu-based vertex movement 
- * @param {geom}
-*/
-function setupGeometryOther(geomOther) {
-    var triangleArray = gl.createVertexArray()
-    gl.bindVertexArray(triangleArray)
-
-    // Object.entries({k1:v1, k2:v2}) returns [[k1,v1],[k2,v2]]
-    // [a, b, c].forEach(func) calls func(a), then func(b), then func(c)
-    Object.entries(geomOther.attributes).forEach(([name,data]) => {
-        // goal 1: get data from CPU memory to GPU memory 
-        // createBuffer allocates an array of GPU memory
-        let buf = gl.createBuffer()
-        // to get data into the array we tell the GPU which buffer to use
-        gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-        // and convert the data to a known fixed-sized type
-        let f32 = new Float32Array(data.flat())
-        // then send that data to the GPU, with a hint that we don't plan to change it very often
-        gl.bufferData(gl.ARRAY_BUFFER, f32, gl.STATIC_DRAW)
-        
-        // goal 2: connect the buffer to an input of the vertex shader
-        // this is done by finding the index of the given input name
-        let loc = gl.getAttribLocation(program, name)
-        // telling the GPU how to parse the bytes of the array
-        gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
-        // and connecting the currently-used array to the VS input
-        gl.enableVertexAttribArray(loc)
-    })
-
-    // We also have to explain how values are connected into shapes.
-    // There are other ways, but we'll use indices into the other arrays
-    var indices = new Uint16Array(geomOther.triangles.flat())
-    // we'll need a GPU array for the indices too
-    var indexBuffer = gl.createBuffer()
-    // but the GPU puts it in a different "ready" position, one for indices
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
-
-    // we return all the bits we'll need to use this work later
-    return {
-        mode:gl.TRIANGLES,      // grab 3 indices per triangle
-        count:indices.length,   // out of this many indices overall
-        type:gl.UNSIGNED_SHORT, // each index is stored as a Uint16
-        vao:triangleArray       // and this VAO knows which buffers to use
-    }
+    return program
 }
 
 /** set up geometry for required/part 1
@@ -94,7 +48,7 @@ function setupGeometry(geom) {
     Object.entries(geom.attributes).forEach(([name,data]) => {
         // goal 1: get data from CPU memory to GPU memory 
         // createBuffer allocates an array of GPU memory
-        let buf = gl.createBuffer()
+        let buf = gl.createBuffer() // do NOT repeat this line
         // to get data into the array we tell the GPU which buffer to use
         gl.bindBuffer(gl.ARRAY_BUFFER, buf)
         // and convert the data to a known fixed-sized type
@@ -132,7 +86,7 @@ function setupGeometry(geom) {
 /** set up geometry for required/part 1
  * @param {geom}
 */
-function setupGeometryGPU(geomGPU) {
+function setupGeometryCPU(geomGPU) {
     // a "vertex array object" or VAO records various data provision commands
     var triangleArray = gl.createVertexArray()
     gl.bindVertexArray(triangleArray)
@@ -247,11 +201,9 @@ function draw3(seconds) {
     let rot_mat = m4rotZ(0.002 * seconds)
     let scale_mat = m4scale(1/(0.001 * seconds), 1/(0.001 * seconds), 1/(0.001 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
-    console.log(combined_mat)
     let matrixBindPoints = gl.getUniformLocation(program, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
-    gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geom.vao)  // and the buffers
     gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw3)
@@ -263,15 +215,13 @@ function draw3(seconds) {
  * @param {seconds}
  */
 function draw4(seconds) {
-    gl.useProgram(program)
+    gl.useProgram(programOther)
     let rot_mat = m4rotY(-0.005 * seconds)
     let scale_mat = m4scale(-1/(0.001 * seconds), 1/(0.001 * seconds), -1/(0.001 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
-    console.log(combined_mat)
-    let matrixBindPoints = gl.getUniformLocation(program, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
+    let matrixBindPoints = gl.getUniformLocation(programOther, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
-    gl.useProgram(program)        // pick the shaders
     gl.bindVertexArray(geomOther.vao)  // and the buffers
     gl.drawElements(geomOther.mode, geomOther.count, geomOther.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw4)
@@ -283,15 +233,9 @@ function draw4(seconds) {
  * @param {seconds}
  */
 function draw5(seconds) {
-    gl.useProgram(program)
-    let rot_mat = m4rotY(-0.01 * seconds)
-    let scale_mat = m4scale(-1/(0.001 * seconds), 1/(0.001 * seconds), -1/(0.001 * seconds))
-    let combined_mat = m4mul(rot_mat, scale_mat)
-    console.log(combined_mat)
-    let matrixBindPoints = gl.getUniformLocation(program, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
-    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
-
-    gl.useProgram(program)        // pick the shaders
+    gl.useProgram(programGPU)
+    let secondsBindPoint = gl.getUniformLocation(programGPU, 'seconds')
+    gl.uniform1f(secondsBindPoint, seconds/1000)
     gl.bindVertexArray(geomGPU.vao)  // and the buffers
     gl.drawElements(geomGPU.mode, geomGPU.count, geomGPU.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw5)
@@ -322,9 +266,8 @@ async function setup(event) {
     window.gl = document.querySelector('canvas').getContext('webgl2')
     let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
-    compileAndLinkGLSL(vs,fs)
+    window.program = compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
-    console.log(data)
     window.geom = setupGeometry(data)
 }
 
@@ -336,28 +279,37 @@ async function setupOther(event) {
     window.gl = document.querySelector('canvas').getContext('webgl2')
     let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
-    compileAndLinkGLSL(vs,fs)
+    window.programOther = compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini2.json').then(r=>r.json())
-    console.log(data)
-    // window.geom = setupGeometry(data)
-    window.geomOther = setupGeometryOther(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    window.geomOther = setupGeometry(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
 }
 
-/** asynchrounous setup: build data & waiting for and linking fragment and vertex WebGL shaders 
- * for other animation in part 1
+/** GPU-based vertex movement setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+ * for GPU animation in part 2
  * @parameter {event}
 */
 async function setupGPU(event) {
     window.gl = document.querySelector('canvas').getContext('webgl2')
     let vs = await fetch('gpu_vertex_shader.glsl').then(res => res.text())
     let fs = await fetch('gpu_frag_shader.glsl').then(res => res.text())
-    compileAndLinkGLSL(vs,fs)
+    window.programGPU = compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
-    console.log(data)
-    // window.geom = setupGeometry(data)
-    window.geomGPU = setupGeometryGPU(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    window.geomGPU = setupGeometry(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
 }
 
+/** CPU-based vertex movement setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+ * for CPU animation in part 2
+ * @parameter {event}
+*/
+async function setupCPU(event) {
+    window.gl = document.querySelector('canvas').getContext('webgl2')
+    let vs = await fetch('cpu_vertex_shader.glsl').then(res => res.text())
+    let fs = await fetch('cpu_frag_shader.glsl').then(res => res.text())
+    window.programCPU = compileAndLinkGLSL(vs,fs)
+    let data = await fetch('illini.json').then(r=>r.json())
+    // window.geom = setupGeometry(data)
+    window.geomGPU = setupGeometryCPU(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+}
 
 /**
  * Initializes WebGL and event handlers after page is fully loaded.
@@ -372,6 +324,7 @@ window.addEventListener('load',(event)=>{
     setupOther()
     setup()
     setupGPU()
+    // setupCPU()
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })

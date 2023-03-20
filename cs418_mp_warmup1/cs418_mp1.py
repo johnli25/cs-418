@@ -190,12 +190,28 @@ for line in txt_input_clean:
             v[0] = (x / w + 1) * width / 2
             v[1] = (y / w + 1) * height / 2
 
+        if hyp_flag == True:
+            for v in [i1, i2, i3]:
+                w_factor = v[-1]
+                for i in range(len(v) - 1):
+                    v[i] /= w_factor
+                v[-1] = 1 / w_factor # 1/w instead
+
         dda1 = dda.dday(i1, i2, 2)
         dda2 = dda.dday(i1, i3, 2)
         dda3 = dda.dday(i2, i3, 2) 
 
         # actual drawing part
         dda_rest = dda.ddax(dda1, dda2, dda3, 0)
+
+        if hyp_flag == True:
+            for v in dda_rest:
+                w_factor = v[-1]
+                v[2] /= w_factor
+                v[3] /= w_factor
+                v[4] /= w_factor
+                v[5] /= w_factor
+
         if cull_flag == True: # (66, 113)
             if otherFunc.cross_product(i1, i2, i3) == False:
                 continue
