@@ -383,6 +383,15 @@ function draw7(seconds) {
     window.pending = requestAnimationFrame(draw7)
 }
 
+/**
+ * Animation callback for seventh display. See {draw1} for more.
+ * Psychedelic
+ * @param {seconds}
+ */
+function draw8(seconds) {
+    
+}
+
 /** Callback for when the radio button selection changes */
 function radioChanged() {
     let chosen = document.querySelector('input[name="example"]:checked').value
