@@ -2,7 +2,83 @@
 
 /** @global global vertex buffer CPU-based vertex movement */
 var vertexBufGlobal;
-// var chosen;
+
+/** @global global logo data for CPU-based vertex movement */
+var logo = {"triangles":
+    [0, 1, 2,
+    1,2,3,
+    4,5,6,
+    5,6,7,
+    8,9,10,
+    9,10,11,
+
+    12,13,14,
+    13,14,15,
+    16,17,18,
+    17,18,19,
+    20,21,22,
+    21,22,23
+    ]
+,"attributes":
+    {"position":
+    [[-0.99, 0.99]
+    ,[ -0.99, 0.66]
+    ,[ 0.04, 0.99]
+    ,[0.04, 0.66]
+
+    ,[-0.74, 0.66]
+    ,[-0.74, 0]
+    ,[-0.21, 0.66]
+    ,[-0.21, 0]
+
+    ,[-0.99, 0]
+    ,[-0.99, -0.33]
+    ,[0.04, 0]
+    ,[0.04, -0.33]
+    ,
+
+    [-0.95, 0.95]
+    ,[ -0.95, 0.70]
+    ,[ 0, 0.95]
+    ,[0, 0.70]
+
+    ,[-0.7, 0.7]
+    ,[-0.7, -0.29]
+    ,[-0.25, 0.7]
+    ,[-0.25, -0.29]
+
+    ,[-0.95, -0.04]
+    ,[-0.95, -0.29]
+    ,[0, -0.04]
+    ,[0, -0.29]]
+    ,"color": [
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+    [0.075,0.16,0.292],
+
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0],
+    [1,1,0]]
+    }
+}
 
 /** compiles and links GLSL to rest of program and graphics 
  * @param {vs_source, fs_source}
@@ -83,27 +159,35 @@ function setupGeometry(geom) {
     }
 }
 
-/** set up geometry for required/part 1
- * @param {geom}
+/** set up geometry for CPU-based vertex movement
+ * @param {geomCPU}
 */
-function setupGeometryCPU(geomGPU) {
+function setupGeometryCPU(geomCPU) {
     // a "vertex array object" or VAO records various data provision commands
     var triangleArray = gl.createVertexArray()
     gl.bindVertexArray(triangleArray)
 
     // Object.entries({k1:v1, k2:v2}) returns [[k1,v1],[k2,v2]]
     // [a, b, c].forEach(func) calls func(a), then func(b), then func(c)
-    Object.entries(geomGPU.attributes).forEach(([name,data]) => {
+    Object.entries(geomCPU.attributes).forEach(([name,data]) => {
         // goal 1: get data from CPU memory to GPU memory 
         // createBuffer allocates an array of GPU memory
         let buf = gl.createBuffer()
-        // to get data into the array we tell the GPU which buffer to use
-        gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-        // and convert the data to a known fixed-sized type
-        let f32 = new Float32Array(data.flat())
-        // then send that data to the GPU, with a hint that we don't plan to change it very often
-        gl.bufferData(gl.ARRAY_BUFFER, f32, gl.STATIC_DRAW)
-        
+        if (name == "position"){
+            vertexBufGlobal = buf 
+            // to get data into the array we tell the GPU which buffer to use
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
+            // and convert the data to a known fixed-sized type
+            let f32 = new Float32Array(data.flat())
+            // then send that data to the GPU, with a hint that we don't plan to change it very often
+            gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
+        } else { //name == "color"
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+            // and convert the data to a known fixed-sized type
+            let f32 = new Float32Array(data.flat())
+            // then send that data to the GPU, with a hint that we don't plan to change it very often
+            gl.bufferData(gl.ARRAY_BUFFER, f32, gl.STATIC_DRAW)
+        }
         // goal 2: connect the buffer to an input of the vertex shader
         // this is done by finding the index of the given input name
         let loc = gl.getAttribLocation(program, name)
@@ -115,12 +199,13 @@ function setupGeometryCPU(geomGPU) {
 
     // We also have to explain how values are connected into shapes.
     // There are other ways, but we'll use indices into the other arrays
-    var indices = new Uint16Array(geomGPU.triangles.flat())
+    var indices = new Uint16Array(geomCPU.triangles.flat())
     // we'll need a GPU array for the indices too
     var indexBuffer = gl.createBuffer()
     // but the GPU puts it in a different "ready" position, one for indices
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
+
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW)
 
     // we return all the bits we'll need to use this work later
     return {
@@ -241,11 +326,67 @@ function draw5(seconds) {
     window.pending = requestAnimationFrame(draw5)
 }
 
+/**
+ * Animation callback for sixth display. See {draw1} for more.
+ * CPU-based vertex mvmt
+ * @param {seconds}
+ */
+function draw6(seconds) {
+    gl.useProgram(programCPU)
+    
+    let rot_mat = m4rotY(-0.005 * seconds)
+    let scale_mat = m4scale(-1/(0.001 * seconds), 1/(0.001 * seconds), -1/(0.001 * seconds))
+    let combined_mat = m4mul(rot_mat, scale_mat)
+    let matrixBindPoints = gl.getUniformLocation(programCPU, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
+
+    gl.bindVertexArray(geomCPU.vao)  // and the buffers
+    
+    // to get data into the array we tell the GPU which buffer to use
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
+    let data = logo
+    // Object.entries(geom.attributes).forEach(([name,data]) => {
+
+    // })
+
+    // and convert the data to a known fixed-sized type
+    let f32 = new Float32Array(data)
+    // console.log(f32)
+    // then send that data to the GPU, with a hint that we don't plan to change it very often
+    gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
+    
+    gl.drawElements(geomCPU.mode, geomCPU.count, geomCPU.type, 0) // then draw things
+    window.pending = requestAnimationFrame(draw6)
+}
+
+/**
+ * Animation callback for seventh display. See {draw1} for more.
+ * collisions
+ * @param {seconds}
+ */
+function draw7(seconds) {
+    gl.useProgram(programCollision)
+    y = Math.abs((seconds % 2820) - 1410);
+    console.log(y)
+    let combined_mat = m4trans(y*0.0005, 0, 0)
+    let matrixBindPoints = gl.getUniformLocation(programCollision, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
+    gl.bindVertexArray(geomCollision.vao)  // and the buffers
+    gl.drawElements(geomCollision.mode, geomCollision.count, geomCollision.type, 0) // then draw things
+
+    combined_mat = m4trans(-y*0.0005, 0, 0)
+    let matrixBindPoints2 = gl.getUniformLocation(programCollision, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints2, false, combined_mat)
+    gl.bindVertexArray(geomCollision2.vao)  // and the buffers
+    gl.drawElements(geomCollision2.mode, geomCollision2.count, geomCollision2.type, 0) // then draw things
+
+    window.pending = requestAnimationFrame(draw7)
+}
+
 /** Callback for when the radio button selection changes */
 function radioChanged() {
     let chosen = document.querySelector('input[name="example"]:checked').value
     cancelAnimationFrame(window.pending)
-    console.log("Hi " + chosen)
     window.pending = requestAnimationFrame(window['draw'+chosen])
 }
 
@@ -254,7 +395,6 @@ function resizeCanvas() {
     let c = document.querySelector('canvas')
     c.width = c.parentElement.clientWidth
     c.height = document.documentElement.clientHeight * 0.8
-    console.log(c.width, c.height)
     if (c.width > c.height) c.width = c.height
     else c.height = c.width
 }
@@ -281,7 +421,7 @@ async function setupOther(event) {
     let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
     window.programOther = compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini2.json').then(r=>r.json())
-    window.geomOther = setupGeometry(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    window.geomOther = setupGeometry(data) 
 }
 
 /** GPU-based vertex movement setup: build data & waiting for and linking fragment and vertex WebGL shaders 
@@ -294,7 +434,7 @@ async function setupGPU(event) {
     let fs = await fetch('gpu_frag_shader.glsl').then(res => res.text())
     window.programGPU = compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
-    window.geomGPU = setupGeometry(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    window.geomGPU = setupGeometry(data) 
 }
 
 /** CPU-based vertex movement setup: build data & waiting for and linking fragment and vertex WebGL shaders 
@@ -307,8 +447,22 @@ async function setupCPU(event) {
     let fs = await fetch('cpu_frag_shader.glsl').then(res => res.text())
     window.programCPU = compileAndLinkGLSL(vs,fs)
     let data = await fetch('illini.json').then(r=>r.json())
-    // window.geom = setupGeometry(data)
-    window.geomGPU = setupGeometryCPU(data) // HOW DO I INCORPORATE THIS SUCCESSFULLY?????
+    window.geomCPU = setupGeometryCPU(data) 
+}
+
+/** collision of 2 objects setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+ * for collision in part 2
+ * @parameter {event}
+*/
+async function setupCollision(event) {
+    window.gl = document.querySelector('canvas').getContext('webgl2')
+    let vs = await fetch('vertex_shader_mp2.glsl').then(res => res.text())
+    let fs = await fetch('fragment_shader_mp2.glsl').then(res => res.text())
+    window.programCollision = compileAndLinkGLSL(vs,fs)
+    let data = await fetch('obj1.json').then(r=>r.json())
+    window.geomCollision = setupGeometry(data)
+    let data2 = await fetch('obj2.json').then(r=>r.json())
+    window.geomCollision2 = setupGeometry(data2)
 }
 
 /**
@@ -324,7 +478,8 @@ window.addEventListener('load',(event)=>{
     setupOther()
     setup()
     setupGPU()
-    // setupCPU()
+    setupCPU()
+    setupCollision()
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })
