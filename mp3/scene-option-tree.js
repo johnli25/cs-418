@@ -89,5 +89,5 @@ window.addEventListener('load', event=> {
         })
         // send the result to the scene generating callback function
         setupScene(scene, options)
-    }
+    })
 })
