@@ -9,7 +9,7 @@ out vec4 vColor;
 
 void main() {
     vColor = color;
-    gl_Position = vec4(
+    gl_Position = vec4( 
         position.xy*cos(seconds*0.21),
         position.zw
     );

@@ -2,9 +2,10 @@
 
 /** @global global vertex buffer CPU-based vertex movement */
 var vertexBufGlobal;
+var left_mvt_flag = true;
 
 /** @global global logo data for CPU-based vertex movement */
-var logo = {"triangles":
+var global_logo = {"triangles":
     [0, 1, 2,
     1,2,3,
     4,5,6,
@@ -333,24 +334,28 @@ function draw5(seconds) {
  */
 function draw6(seconds) {
     gl.useProgram(programCPU)
-    
-    let rot_mat = m4rotY(-0.005 * seconds)
-    let scale_mat = m4scale(-1/(0.001 * seconds), 1/(0.001 * seconds), -1/(0.001 * seconds))
-    let combined_mat = m4mul(rot_mat, scale_mat)
-    let matrixBindPoints = gl.getUniformLocation(programCPU, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
-    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
     gl.bindVertexArray(geomCPU.vao)  // and the buffers
-    
     // to get data into the array we tell the GPU which buffer to use
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
-    let data = logo
-    // Object.entries(geom.attributes).forEach(([name,data]) => {
-
-    // })
-
-    // and convert the data to a known fixed-sized type
-    let f32 = new Float32Array(data)
+    let data = global_logo
+    y = Math.abs((seconds % 2800) - 1400);
+    console.log(y)
+    for (let i = 0; i < data.attributes.position.length; i++){
+        if (left_mvt_flag == true) {
+            data.attributes.position[i][0] += (y * 0.00002)
+            if (data.attributes.position[23][0] >= 1.0)
+                left_mvt_flag = false
+        }
+        else if (left_mvt_flag == false) {// false 
+            data.attributes.position[i][0] -= (y * 0.00002)
+            if (data.attributes.position[0][0] <= -1.0)
+                left_mvt_flag = true
+        }
+    }
+    // global_logo.attributes.position = data.attributes.position //update global logo data
+    // console.log(global_logo.attributes.position[0])
+    let f32 = new Float32Array(global_logo.attributes.position.flat())
     // console.log(f32)
     // then send that data to the GPU, with a hint that we don't plan to change it very often
     gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
@@ -389,7 +394,12 @@ function draw7(seconds) {
  * @param {seconds}
  */
 function draw8(seconds) {
-    
+    gl.useProgram(programPsych)
+    let secondsBindPoint = gl.getUniformLocation(programPsych, 'seconds')
+    gl.uniform1f(secondsBindPoint, seconds/1000)
+    gl.bindVertexArray(geomPysch.vao)  // and the buffers
+    gl.drawElements(geomPysch.mode, geomPysch.count, geomPysch.type, 0) // then draw things
+    window.pending = requestAnimationFrame(draw8)
 }
 
 /** Callback for when the radio button selection changes */
@@ -474,6 +484,19 @@ async function setupCollision(event) {
     window.geomCollision2 = setupGeometry(data2)
 }
 
+/**Psychedelic setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+ * for collision in part 2
+ * @parameter {event}
+*/
+async function setupPsych(event) {
+    window.gl = document.querySelector('canvas').getContext('webgl2')
+    let vs = await fetch('psych_vertex_shader.glsl').then(res => res.text())
+    let fs = await fetch('psych_frag_shader.glsl').then(res => res.text())
+    window.programPsych = compileAndLinkGLSL(vs,fs)
+    let data = await fetch('psych.json').then(r=>r.json())
+    window.geomPysch = setupGeometry(data)
+}
+
 /**
  * Initializes WebGL and event handlers after page is fully loaded.
  * This example uses only `gl.clear` so it doesn't need any shaders, etc;
@@ -489,6 +512,7 @@ window.addEventListener('load',(event)=>{
     setupGPU()
     setupCPU()
     setupCollision()
+    setupPsych()
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })
