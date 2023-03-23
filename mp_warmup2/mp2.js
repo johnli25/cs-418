@@ -2,7 +2,17 @@
 
 /** @global global vertex buffer CPU-based vertex movement */
 var vertexBufGlobal;
+
+/** @global global flag to alternate between x-motions */
 var left_mvt_flag = true;
+
+/** @global global variable to store logo position during mouse movement */
+var global_obj1;
+
+/** @global global variables to store mouse cursor X and Y positions */
+var mouseX;
+var mouseY;
+var canvas_global
 
 /** @global global logo data for CPU-based vertex movement */
 var global_logo = {"triangles":
@@ -217,6 +227,63 @@ function setupGeometryCPU(geomCPU) {
     }
 }
 
+/** set up geometry for CPU-based vertex movement
+ * @param {geomCPU}
+*/
+function setupGeometryMouse(geomMouse) {
+    // a "vertex array object" or VAO records various data provision commands
+    var triangleArray = gl.createVertexArray()
+    gl.bindVertexArray(triangleArray)
+
+    // Object.entries({k1:v1, k2:v2}) returns [[k1,v1],[k2,v2]]
+    // [a, b, c].forEach(func) calls func(a), then func(b), then func(c)
+    Object.entries(geomMouse.attributes).forEach(([name,data]) => {
+        // goal 1: get data from CPU memory to GPU memory 
+        // createBuffer allocates an array of GPU memory
+        let buf = gl.createBuffer()
+        if (name == "position"){
+            vertexBufGlobal = buf 
+            // to get data into the array we tell the GPU which buffer to use
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
+            // and convert the data to a known fixed-sized type
+            let f32 = new Float32Array(data.flat())
+            // then send that data to the GPU, with a hint that we don't plan to change it very often
+            gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
+        } else { //name == "color"
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+            // and convert the data to a known fixed-sized type
+            let f32 = new Float32Array(data.flat())
+            // then send that data to the GPU, with a hint that we don't plan to change it very often
+            gl.bufferData(gl.ARRAY_BUFFER, f32, gl.STATIC_DRAW)
+        }
+        // goal 2: connect the buffer to an input of the vertex shader
+        // this is done by finding the index of the given input name
+        let loc = gl.getAttribLocation(program, name)
+        // telling the GPU how to parse the bytes of the array
+        gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
+        // and connecting the currently-used array to the VS input
+        gl.enableVertexAttribArray(loc)
+    })
+
+    // We also have to explain how values are connected into shapes.
+    // There are other ways, but we'll use indices into the other arrays
+    var indices = new Uint16Array(geomMouse.triangles.flat())
+    // we'll need a GPU array for the indices too
+    var indexBuffer = gl.createBuffer()
+    // but the GPU puts it in a different "ready" position, one for indices
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.DYNAMIC_DRAW)
+
+    // we return all the bits we'll need to use this work later
+    return {
+        mode:gl.TRIANGLES,      // grab 3 indices per triangle
+        count:indices.length,   // out of this many indices overall
+        type:gl.UNSIGNED_SHORT, // each index is stored as a Uint16
+        vao:triangleArray       // and this VAO knows which buffers to use
+    }
+}
+
 /**
  * Animation callback for the first display. Should be invoked as 
  * `window.pending = requestAnimationFrame(draw1)`
@@ -340,23 +407,20 @@ function draw6(seconds) {
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufGlobal)
     let data = global_logo
     y = Math.abs((seconds % 2800) - 1400);
-    console.log(y)
     for (let i = 0; i < data.attributes.position.length; i++){
         if (left_mvt_flag == true) {
-            data.attributes.position[i][0] += (y * 0.00002)
+            data.attributes.position[i][0] += (y * 0.00005)
             if (data.attributes.position[23][0] >= 1.0)
                 left_mvt_flag = false
         }
         else if (left_mvt_flag == false) {// false 
-            data.attributes.position[i][0] -= (y * 0.00002)
+            data.attributes.position[i][0] -= (y * 0.00005)
             if (data.attributes.position[0][0] <= -1.0)
                 left_mvt_flag = true
         }
     }
     // global_logo.attributes.position = data.attributes.position //update global logo data
-    // console.log(global_logo.attributes.position[0])
     let f32 = new Float32Array(global_logo.attributes.position.flat())
-    // console.log(f32)
     // then send that data to the GPU, with a hint that we don't plan to change it very often
     gl.bufferData(gl.ARRAY_BUFFER, f32, gl.DYNAMIC_DRAW)
     
@@ -372,7 +436,6 @@ function draw6(seconds) {
 function draw7(seconds) {
     gl.useProgram(programCollision)
     y = Math.abs((seconds % 2820) - 1410);
-    console.log(y)
     let combined_mat = m4trans(y*0.0005, 0, 0)
     let matrixBindPoints = gl.getUniformLocation(programCollision, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
@@ -389,7 +452,7 @@ function draw7(seconds) {
 }
 
 /**
- * Animation callback for seventh display. See {draw1} for more.
+ * Animation callback for eighth display. See {draw1} for more.
  * Psychedelic
  * @param {seconds}
  */
@@ -400,6 +463,25 @@ function draw8(seconds) {
     gl.bindVertexArray(geomPysch.vao)  // and the buffers
     gl.drawElements(geomPysch.mode, geomPysch.count, geomPysch.type, 0) // then draw things
     window.pending = requestAnimationFrame(draw8)
+}
+
+/**
+ * Animation callback for seventh display. See {draw1} for more.
+ * Psychedelic
+ * @param {seconds}
+ */
+function draw9(seconds) {
+    gl.clearColor(1, 0.373, 0.02, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.useProgram(programMouse)
+    // let combined_mat = m4trans(0,0,0) // (Mouse.x - canvas.offsetLeft) / canvas.width
+    let combined_mat = m4trans(2*(mouseX - canvas_global.offsetLeft) / canvas_global.width, (-2*(mouseY - canvas_global.offsetTop) / canvas_global.height) + (canvas_global.offsetTop + 0.4*canvas_global.height) / canvas_global.height, 0)
+    let matrixBindPoints = gl.getUniformLocation(programMouse, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
+    gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
+
+    gl.bindVertexArray(geomMouse.vao)  // and the buffers
+    gl.drawElements(geomMouse.mode, geomMouse.count, geomMouse.type, 0) // then draw things
+    window.pending = requestAnimationFrame(draw9)
 }
 
 /** Callback for when the radio button selection changes */
@@ -469,7 +551,7 @@ async function setupCPU(event) {
     window.geomCPU = setupGeometryCPU(data) 
 }
 
-/** collision of 2 objects setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+/* collision of 2 objects setup: build data & waiting for and linking fragment and vertex WebGL shaders 
  * for collision in part 2
  * @parameter {event}
 */
@@ -484,7 +566,7 @@ async function setupCollision(event) {
     window.geomCollision2 = setupGeometry(data2)
 }
 
-/**Psychedelic setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+/* Psychedelic setup: build data & waiting for and linking fragment and vertex WebGL shaders 
  * for collision in part 2
  * @parameter {event}
 */
@@ -497,6 +579,19 @@ async function setupPsych(event) {
     window.geomPysch = setupGeometry(data)
 }
 
+/* Mouse movement setup: build data & waiting for and linking fragment and vertex WebGL shaders 
+ * for mouse movement in part 2
+ * @parameter {event}
+*/
+async function setupMouse(event) {
+    window.gl = document.querySelector('canvas').getContext('webgl2')
+    let vs = await fetch('mouse_vertex_shader.glsl').then(res => res.text())
+    let fs = await fetch('mouse_frag_shader.glsl').then(res => res.text())
+    window.programMouse = compileAndLinkGLSL(vs,fs)
+    let data = await fetch('obj1.json').then(r=>r.json())
+    window.geomMouse = setupGeometry(data)
+}
+
 /**
  * Initializes WebGL and event handlers after page is fully loaded.
  * This example uses only `gl.clear` so it doesn't need any shaders, etc;
@@ -505,16 +600,31 @@ async function setupPsych(event) {
  * thus initializing the render.
  */
 window.addEventListener('load',(event)=>{
-    resizeCanvas()
+    // resizeCanvas()
     window.gl = document.querySelector('canvas').getContext('webgl2')
+    canvas_global = document.querySelector('canvas')
+    console.log(canvas_global)
+    console.log(canvas_global.offsetLeft)
+    console.log(canvas_global.width)
     setupOther()
     setup()
     setupGPU()
     setupCPU()
     setupCollision()
     setupPsych()
+    setupMouse()
     document.querySelectorAll('input[name="example"]').forEach(elem => {
         elem.addEventListener('change', radioChanged)
     })
     radioChanged()
 })
+
+window.addEventListener('mousemove', function (e) {
+    // console.log(e)
+    mouseX = e.clientX
+    mouseY = e.clientY
+    console.log((mouseX - canvas_global.offsetLeft) / canvas_global.width)
+    console.log(-1*(mouseY + canvas_global.offsetTop) / canvas_global.height)
+    // document.getElementById('x-value').textContent = e.x;
+    // document.getElementById('y-value').textContent = e.y;
+});
