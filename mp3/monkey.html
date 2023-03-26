@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Basic Lighting Example</title>
+    <!-- part of a multi-part demonstration: see cs418.cs.illinois.edu -->
+    <script src="math.js"></script>
+
+<!-- The source code of a vertex shader directly in the HTML. The 'type=' command can have any value except "javascript" and just tells the browser not to try to run the code as javascript. -->
+<script id="vert" type="glsl">
+#version 300 es
+in vec4 position;
+in vec3 normal;
+out vec3 fnormal;
+uniform mat4 p;
+uniform mat4 mv;
+void main() {
+    vec4 offset = vec4(position.xyz + normal.xyz*0.2, position.w);
+    gl_Position = p * mv * offset;
+    fnormal = normal;
+    
+}
+</script>
+
+
+<!-- The source code of a fragment shader. -->
+<script id="frag" type="glsl">
+#version 300 es
+precision highp float;
+uniform vec4 color;
+out vec4 fragColor;
+in vec3 fnormal;
+void main() {
+    fragColor = vec4(fnormal, 1);
+}
+</script>
+
+</head>
+<body><canvas width="500" height="500"></canvas></body>
+</html>
