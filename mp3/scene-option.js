@@ -1,10 +1,50 @@
-
-/**
- * @global IlliniOrange constant color
- */
+/** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.075, 0.16, 0.292, 1])
 const IlliniOrange = new Float32Array([1, 0.373, 0.02, 1])
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
+/** @global global variables for holding size of grid*/
+var gridXSize;
+var gridYSize;
+
+/** @global grid/terrain */
+terrain = {}
+
+// HOW DO I CORRECTLY FACTOR IN AND "SCALE" THE NUM OF FRACTURES INTO THE GRID + GRIDSIZE???
+function fillGrid(width, height){
+    let attribute = {}
+    let positions = []
+    let triangles = []
+
+    for (let i = 0; i < width; i += 1){
+        for (let j = 0; j < height; j += 1){
+            let coordinate = new Array(3)
+            coordinate[0] = (i - (width / 2)) / ((width / 2)) // x
+            coordinate[1] = (j - (height / 2)) / ((height / 2))
+            coordinate[2] = 1
+            // positions[i * gridXSize + j] = coordinate
+            positions.push(coordinate)
+        }
+    }
+
+    for (let i = 0; i < width - 1; i += 1){
+        for (let j = 0; j < height - 1; j += 1){
+            let tri1 = new Array(3)
+            let tri2 = new Array(3)
+            let topleft = j*width + i 
+            let topright = j*width + i + 1
+            let downleft = topleft + width // + 1
+            let downright = topleft + width + 1 //+ 2
+            tri1 = [topleft, topright, downleft]
+            tri2 = [topright, downleft, downright]
+
+            triangles.push(tri1)
+            triangles.push(tri2)
+        }
+    }
+    terrain.attributes = attribute
+    terrain.attributes.position = positions
+    terrain.triangles = triangles
+}
 
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
@@ -290,6 +330,7 @@ function fillScreen() {
 }
 
 function addNormals(data) {
+    cnt = 0
     let normals = new Array(data.attributes.position.length)
     for(let i=0; i<normals.length; i+=1) normals[i] = new Array(3).fill(0)
     for([i0,i1,i2] of data.triangles) {
@@ -301,16 +342,70 @@ function addNormals(data) {
         let e0 = sub(p0,p2)
         let e1 = sub(p1,p2)
         let n = cross(e0,e1)
+
+        if (n[0] == 0 && n[1] == 0 && n[2] == 0){
+            console.log("n: ", n)
+            console.log("e0: ", e0)
+            console.log("e1: ", e1)
+            console.log("normals: ", normals)
+        }
+
         // loop over x, y and z
-        for(let j=0; j<3; j+=1) {
-            // add a coordinate of a normal to each of the three normals
-            normals[i0][j] += n[j]
-            normals[i1][j] += n[j]
-            normals[i2][j] += n[j]
+        // for(let j=0; j<3; j+=1) {
+        //     // add a coordinate of a normal to each of the three normals
+        //     normals[i0][j] += n[j]
+        //     normals[i1][j] += n[j]
+        //     normals[i2][j] += n[j]
+        // }
+        temp1 = normals[i0]
+        temp2 = normals[i1]
+        temp3 = normals[i2]
+
+        normals[i0][0] += n[0]
+        normals[i0][1] += n[1]
+        normals[i0][2] += n[2]
+        if (normals[i0][0] == 0 && normals[i0][1] == 0 && normals[i0][2] == 0){
+            console.log("i0 normals prev: ", temp1)
+            console.log("normals NOW: ", normals[i0])
+            console.log("normals[0]: ", normals[i0][0] += n[0])
+            console.log("normals[1]: ", normals[i0][1] += n[1])
+            console.log("normals[2]: ", normals[i0][2] += n[2])
+            cnt += 1
+            console.log("n: ", n)
+        }
+
+        normals[i1][0] += n[0]
+        normals[i1][1] += n[1]
+        normals[i1][2] += n[2]        
+
+        normals[i2][0] += n[0]
+        normals[i2][1] += n[1]
+        normals[i2][2] += n[2]
+
+        // if (normals[i1][0] == 0 && normals[i1][1] == 0 && normals[i1][2] == 0){
+        //     console.log("i1 normals prev: ", temp2)
+        //     console.log("normals NOW: ", normals[i1])
+        //     console.log("normals[0]: ", normals[i1][0] += n[0])
+        //     console.log("normals[1]: ", normals[i1][1] += n[1])
+        //     console.log("normals[2]: ", normals[i1][2] += n[2])
+        // }
+        // if (normals[i2][0] == 0 && normals[i2][1] == 0 && normals[i2][2] == 0){
+        //     console.log("i2 normals prev: ", temp3)
+        //     console.log("normals NOW: ", normals[i2])
+        //     console.log("normals[0]: ", normals[i2][0] += n[0])
+        //     console.log("normals[1]: ", normals[i2][1] += n[1])
+        //     console.log("normals[2]: ", normals[i2][2] += n[2])
         }
     }
-    for(let i=0; i<normals.length; i+=1) normals[i] = normalize(normals[i])
+    console.log(normals.length)
+    for(let i=0; i<normals.length; i+=1) {
+        if (normals[i][0] == 0 && normals[i][1] == 0 && normals[i][2] == 0){
+        //    console.log("index: ", i)
+        }
+        normals[i] = normalize(normals[i])
+    }
     data.attributes.normal = normals;
+    console.log(data)
 }
 
 async function setup(event) {
@@ -322,8 +417,11 @@ async function setup(event) {
     let fs = await fetch('frag_shader.glsl').then(res => res.text())
     window.program = compileAndLinkGLSL(vs,fs)
     gl.enable(gl.DEPTH_TEST)
-    let monkey = await fetch('grid.json').then(res => res.json())
+    let monkey = await fetch('monkey.json').then(res => res.json())
+    // addNormals(terrain)
     addNormals(monkey)
+    fillGrid(100, 100)
+    addNormals(terrain)
     window.geom = setupGeometry(monkey)
     fillScreen()
     window.addEventListener('resize', fillScreen)
@@ -332,6 +430,11 @@ async function setup(event) {
 
 async function setupScene(scene, options) {
     console.log("To do: render",scene,"with options",options)
+    gridXSize = options.resolution
+    gridYSize = options.resolution
+    fillGrid(gridXSize, gridYSize)
+    addNormals(terrain)
+    console.log(terrain)
 }
 
 /**
@@ -429,8 +532,3 @@ window.addEventListener('load', event=> {
         // setup()
     })
 })
-
-// window.addEventListener('load', setup)
-
-// window.addEventListener('resize', fillScreen)
-
