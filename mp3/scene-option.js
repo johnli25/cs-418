@@ -2,32 +2,33 @@
 const IlliniBlue = new Float32Array([0.075, 0.16, 0.292, 1])
 const IlliniOrange = new Float32Array([1, 0.373, 0.02, 1])
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
-/** @global global variables for holding size of grid*/
+
+/** @global global variables for holding size of grid and number of fractures*/
 var gridXSize;
 var gridYSize;
+var fractures;
 
 /** @global grid/terrain */
 terrain = {}
 
-// HOW DO I CORRECTLY FACTOR IN AND "SCALE" THE NUM OF FRACTURES INTO THE GRID + GRIDSIZE???
 function fillGrid(width, height){
     let attribute = {}
     let positions = []
     let triangles = []
 
-    for (let i = 0; i < width; i += 1){
-        for (let j = 0; j < height; j += 1){
+    for (let i = 0; i < width + 1; i += 1){
+        for (let j = 0; j < height + 1; j += 1){
             let coordinate = new Array(3)
             coordinate[0] = (i - (width / 2)) / ((width / 2)) // x
             coordinate[1] = (j - (height / 2)) / ((height / 2))
-            coordinate[2] = 1
+            coordinate[2] = 0
             // positions[i * gridXSize + j] = coordinate
             positions.push(coordinate)
         }
     }
 
-    for (let i = 0; i < width - 1; i += 1){
-        for (let j = 0; j < height - 1; j += 1){
+    for (let i = 0; i < width; i += 1){
+        for (let j = 0; j < height; j += 1){
             let tri1 = new Array(3)
             let tri2 = new Array(3)
             let topleft = j*width + i 
@@ -44,6 +45,27 @@ function fillGrid(width, height){
     terrain.attributes = attribute
     terrain.attributes.position = positions
     terrain.triangles = triangles
+}
+
+function faultingMethod(fractures){
+  for (let i = 0; i < fractures; i += 1){
+    random = (Math.random() * (2.0000 * Math.PI - 0.0000) + 0.0000).toFixed(4)
+    a = Math.sin(random)
+    b = Math.cos(random)
+    c = (Math.random() * (1 - (-1)) - 1).toFixed(4)
+    // console.log("a b c: ", a, b, c)
+    for (let j = 0; j < terrain.attributes.position.length; j += 1){
+      // console.log(terrain.attributes.position[j])
+      coor_x = terrain.attributes.position[j][0]
+      coor_y = terrain.attributes.position[j][1]
+      coor_z = terrain.attributes.position[j][2]
+      if (a * coor_x + b * coor_y - c > 0){
+        terrain.attributes.position[j][2] += 0.03
+      } else {
+        terrain.attributes.position[j][2] -= 0.03
+      }
+    }
+  }
 }
 
 // vector ops
@@ -228,22 +250,22 @@ function supplyDataBuffer(data, program, vsIn, mode) {
 /**
  * Resizes the canvas to completely fill the screen
  */
-function fillScreen() {
-    let canvas = document.querySelector('canvas')
-    document.body.style.margin = '0'
-    canvas.style.width = '100vw'
-    canvas.style.height = '100vh'
-    canvas.width = canvas.clientWidth
-    canvas.height = canvas.clientHeight
-    canvas.style.width = ''
-    canvas.style.height = ''
-    window.p = m4perspNegZ(1,9, 0.7, canvas.width, canvas.height)
-    if (window.gl) {
-        gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(1,9, 0.4, gl.canvas.width, gl.canvas.height)
-        draw()
-    }
-}
+// function fillScreen() {
+//     let canvas = document.querySelector('canvas')
+//     document.body.style.margin = '0'
+//     canvas.style.width = '100vw'
+//     canvas.style.height = '100vh'
+//     canvas.width = canvas.clientWidth
+//     canvas.height = canvas.clientHeight
+//     canvas.style.width = ''
+//     canvas.style.height = ''
+//     window.p = m4perspNegZ(1,9, 0.7, canvas.width, canvas.height)
+//     if (window.gl) {
+//         gl.viewport(0,0, canvas.width, canvas.height)
+//         window.p = m4perspNegZ(1,9, 0.4, gl.canvas.width, gl.canvas.height)
+//         draw()
+//     }
+// }
 
 /**
  * Creates a Vertex Array Object and puts into it all of the data in the given
@@ -325,87 +347,90 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(0.1, 10, 1, canvas.width, canvas.height)
+        window.p = m4perspNegZ(2.0, 10, 1.0, canvas.width, canvas.height)
     }
 }
 
 function addNormals(data) {
-    cnt = 0
-    let normals = new Array(data.attributes.position.length)
-    for(let i=0; i<normals.length; i+=1) normals[i] = new Array(3).fill(0)
-    for([i0,i1,i2] of data.triangles) {
-        // find the vertex positions
-        let p0 = data.attributes.position[i0]
-        let p1 = data.attributes.position[i1]
-        let p2 = data.attributes.position[i2]
-        // find the edge vectors and normal
-        let e0 = sub(p0,p2)
-        let e1 = sub(p1,p2)
-        let n = cross(e0,e1)
+  cnt = 0
+  let normals = new Array(data.attributes.position.length)
+  for(let i=0; i<normals.length; i+=1) normals[i] = new Array(3).fill(0)
+  for([i0,i1,i2] of data.triangles) {
+    // find the vertex positions
+    let p0 = data.attributes.position[i0]
+    let p1 = data.attributes.position[i1]
+    let p2 = data.attributes.position[i2]
+    // find the edge vectors and normal
+    let e0 = sub(p0,p2)
+    let e1 = sub(p1,p2)
+    let n = cross(e0,e1)
 
-        if (n[0] == 0 && n[1] == 0 && n[2] == 0){
-            console.log("n: ", n)
-            console.log("e0: ", e0)
-            console.log("e1: ", e1)
-            console.log("normals: ", normals)
-        }
+    // if (n[0] == 0 && n[1] == 0 && n[2] == 0){
+    //     console.log("n: ", n)
+    //     console.log("e0: ", e0)
+    //     console.log("e1: ", e1)
+    //     console.log("normals: ", normals)
+    // }
 
-        // loop over x, y and z
-        // for(let j=0; j<3; j+=1) {
-        //     // add a coordinate of a normal to each of the three normals
-        //     normals[i0][j] += n[j]
-        //     normals[i1][j] += n[j]
-        //     normals[i2][j] += n[j]
-        // }
-        temp1 = normals[i0]
-        temp2 = normals[i1]
-        temp3 = normals[i2]
+    // loop over x, y and z
+    // for(let j=0; j<3; j+=1) {
+    //     // add a coordinate of a normal to each of the three normals
+    //     normals[i0][j] += n[j]
+    //     normals[i1][j] += n[j]
+    //     normals[i2][j] += n[j]
+    // }
+    temp1 = normals[i0]
+    temp2 = normals[i1]
+    temp3 = normals[i2]
+    // if (normals[i0][0] == 0 && normals[i0][1] == 0 && normals[i0][2] == 0){
+    //   console.log("normals previously: ", normals[i0])
+    // }
 
-        normals[i0][0] += n[0]
-        normals[i0][1] += n[1]
-        normals[i0][2] += n[2]
-        if (normals[i0][0] == 0 && normals[i0][1] == 0 && normals[i0][2] == 0){
-            console.log("i0 normals prev: ", temp1)
-            console.log("normals NOW: ", normals[i0])
-            console.log("normals[0]: ", normals[i0][0] += n[0])
-            console.log("normals[1]: ", normals[i0][1] += n[1])
-            console.log("normals[2]: ", normals[i0][2] += n[2])
-            cnt += 1
-            console.log("n: ", n)
-        }
+    normals[i0][0] += n[0]
+    normals[i0][1] += n[1]
+    normals[i0][2] += n[2]
+    // if (normals[i0][0] == 0 && normals[i0][1] == 0 && normals[i0][2] == 0){
+    //     // console.log("i0 normals prev: ", temp1)
+    //     console.log("normals NOW: ", normals[i0])
+    //     console.log("normals[0]: ", normals[i0][0] += n[0])
+    //     console.log("normals[1]: ", normals[i0][1] += n[1])
+    //     console.log("normals[2]: ", normals[i0][2] += n[2])
+    //     cnt += 1
+    //     console.log("n: ", n)
+    // }
 
-        normals[i1][0] += n[0]
-        normals[i1][1] += n[1]
-        normals[i1][2] += n[2]        
+    normals[i1][0] += n[0]
+    normals[i1][1] += n[1]
+    normals[i1][2] += n[2]        
 
-        normals[i2][0] += n[0]
-        normals[i2][1] += n[1]
-        normals[i2][2] += n[2]
+    normals[i2][0] += n[0]
+    normals[i2][1] += n[1]
+    normals[i2][2] += n[2]
 
-        // if (normals[i1][0] == 0 && normals[i1][1] == 0 && normals[i1][2] == 0){
-        //     console.log("i1 normals prev: ", temp2)
-        //     console.log("normals NOW: ", normals[i1])
-        //     console.log("normals[0]: ", normals[i1][0] += n[0])
-        //     console.log("normals[1]: ", normals[i1][1] += n[1])
-        //     console.log("normals[2]: ", normals[i1][2] += n[2])
-        // }
-        // if (normals[i2][0] == 0 && normals[i2][1] == 0 && normals[i2][2] == 0){
-        //     console.log("i2 normals prev: ", temp3)
-        //     console.log("normals NOW: ", normals[i2])
-        //     console.log("normals[0]: ", normals[i2][0] += n[0])
-        //     console.log("normals[1]: ", normals[i2][1] += n[1])
-        //     console.log("normals[2]: ", normals[i2][2] += n[2])
-        }
+    // if (normals[i1][0] == 0 && normals[i1][1] == 0 && normals[i1][2] == 0){
+    //     console.log("i1 normals prev: ", temp2)
+    //     console.log("normals NOW: ", normals[i1])
+    //     console.log("normals[0]: ", normals[i1][0] += n[0])
+    //     console.log("normals[1]: ", normals[i1][1] += n[1])
+    //     console.log("normals[2]: ", normals[i1][2] += n[2])
+    // }
+    // if (normals[i2][0] == 0 && normals[i2][1] == 0 && normals[i2][2] == 0){
+    //     console.log("i2 normals prev: ", temp3)
+    //     console.log("normals NOW: ", normals[i2])
+    //     console.log("normals[0]: ", normals[i2][0] += n[0])
+    //     console.log("normals[1]: ", normals[i2][1] += n[1])
+    //     console.log("normals[2]: ", normals[i2][2] += n[2])
+    // }
+  }
+  for(let i=0; i<normals.length; i+=1) {
+    if (normals[i][0] == 0 && normals[i][1] == 0 && normals[i][2] == 0){
+      console.log("index: ", i)
+      // console.log(data.attributes.position[i])
     }
-    console.log(normals.length)
-    for(let i=0; i<normals.length; i+=1) {
-        if (normals[i][0] == 0 && normals[i][1] == 0 && normals[i][2] == 0){
-        //    console.log("index: ", i)
-        }
-        normals[i] = normalize(normals[i])
-    }
-    data.attributes.normal = normals;
-    console.log(data)
+    normals[i] = normalize(normals[i])
+  }
+  data.attributes.normal = normals;
+  console.log(data)
 }
 
 async function setup(event) {
@@ -422,7 +447,8 @@ async function setup(event) {
     addNormals(monkey)
     fillGrid(100, 100)
     addNormals(terrain)
-    window.geom = setupGeometry(monkey)
+    faultingMethod(100)
+    window.geom = setupGeometry(terrain)
     fillScreen()
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
@@ -432,9 +458,11 @@ async function setupScene(scene, options) {
     console.log("To do: render",scene,"with options",options)
     gridXSize = options.resolution
     gridYSize = options.resolution
+    fractures = options.slices
     fillGrid(gridXSize, gridYSize)
     addNormals(terrain)
-    console.log(terrain)
+    faultingMethod(fractures)
+    // console.log(terrain)
 }
 
 /**
