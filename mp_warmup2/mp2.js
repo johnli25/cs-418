@@ -290,10 +290,13 @@ const m4mul = (...args) => args.reduce((m1,m2) => {
  * @param {seconds}
  */
 function draw3(seconds) {
+    gl.clearColor(0.069, 0.19, 0.92, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
     gl.useProgram(program)
     let rot_mat = m4rotZ(0.002 * seconds)
     let scale_mat = m4scale(1/(0.001 * seconds), 1/(0.001 * seconds), 1/(0.001 * seconds))
     let combined_mat = m4mul(rot_mat, scale_mat)
+    // let combined_mat = ([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
     let matrixBindPoints = gl.getUniformLocation(program, 'combined_mat') // getUniformLocation finds and allocates address space/location of variable
     gl.uniformMatrix4fv(matrixBindPoints, false, combined_mat)
 
