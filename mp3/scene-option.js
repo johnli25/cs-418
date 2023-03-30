@@ -155,10 +155,18 @@ function fillGrid(width, height){
           let topright = i*(width + 1) + j + 1
           let downleft = topleft + width + 1
           let downright = topleft + width + 2
-          tri1 = [topleft, downleft, topright] // YOU COULD ALSO SWITCH 'DOWNLEFT' AND 'TOPRIGHT'
-          // tri1 = [topleft, topright, downleft] // YOU COULD ALSO SWITCH 'DOWNLEFT' AND 'TOPRIGHT'
-          tri2 = [topright, downleft, downright]
 
+          // combo 1: ALL orange
+          // tri1 = [topright, downleft, topleft] //swap topright and topleft <-> all black
+          // tri2 = [downright, downleft, topright] //swap downright and topright <-> all black
+
+          // combo 2: all black
+          // tri1 = [topleft, downleft, topright] //swap topright and topleft <-> all black
+          // tri2 = [topright, downleft, downright] //swap downright and topright <-> all black
+
+          // combo 3: speckled
+          tri1 = [topleft, topright, downleft] //swap topright and downleft
+          tri2 = [topright, downleft, downright] //keep same
           triangles.push(tri1)
           triangles.push(tri2)
       }
@@ -203,13 +211,6 @@ function addNormals(data) {
     let e1 = sub(p1,p2)
     let n = cross(e0,e1)
 
-    // if (n[0] == 0 && n[1] == 0 && n[2] == 0){
-    //     console.log("n: ", n)
-    //     console.log("e0: ", e0)
-    //     console.log("e1: ", e1)
-    //     console.log("normals: ", normals)
-    // }
-
     // loop over x, y and z
     // for(let j=0; j<3; j+=1) {
     //     // add a coordinate of a normal to each of the three normals
@@ -220,22 +221,10 @@ function addNormals(data) {
     temp1 = normals[i0]
     temp2 = normals[i1]
     temp3 = normals[i2]
-    // if (normals[i0][0] == 0 && normals[i0][1] == 0 && normals[i0][2] == 0){
-    //   console.log("normals previously: ", normals[i0])
-    // }
 
     normals[i0][0] += n[0]
     normals[i0][1] += n[1]
     normals[i0][2] += n[2]
-    // if (normals[i0][0] == 0 && normals[i0][1] == 0 && normals[i0][2] == 0){
-    //     // console.log("i0 normals prev: ", temp1)
-    //     console.log("normals NOW: ", normals[i0])
-    //     console.log("normals[0]: ", normals[i0][0] += n[0])
-    //     console.log("normals[1]: ", normals[i0][1] += n[1])
-    //     console.log("normals[2]: ", normals[i0][2] += n[2])
-    //     cnt += 1
-    //     console.log("n: ", n)
-    // }
 
     normals[i1][0] += n[0]
     normals[i1][1] += n[1]
@@ -244,21 +233,6 @@ function addNormals(data) {
     normals[i2][0] += n[0]
     normals[i2][1] += n[1]
     normals[i2][2] += n[2]
-
-    // if (normals[i1][0] == 0 && normals[i1][1] == 0 && normals[i1][2] == 0){
-    //     console.log("i1 normals prev: ", temp2)
-    //     console.log("normals NOW: ", normals[i1])
-    //     console.log("normals[0]: ", normals[i1][0] += n[0])
-    //     console.log("normals[1]: ", normals[i1][1] += n[1])
-    //     console.log("normals[2]: ", normals[i1][2] += n[2])
-    // }
-    // if (normals[i2][0] == 0 && normals[i2][1] == 0 && normals[i2][2] == 0){
-    //     console.log("i2 normals prev: ", temp3)
-    //     console.log("normals NOW: ", normals[i2])
-    //     console.log("normals[0]: ", normals[i2][0] += n[0])
-    //     console.log("normals[1]: ", normals[i2][1] += n[1])
-    //     console.log("normals[2]: ", normals[i2][2] += n[2])
-    // }
   }
   for(let i=0; i<normals.length; i+=1) {
     if (normals[i][0] == 0 && normals[i][1] == 0 && normals[i][2] == 0){
