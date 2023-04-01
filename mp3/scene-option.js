@@ -1,6 +1,12 @@
 /** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.075, 0.16, 0.292, 1])
 const IlliniOrange = new Float32Array([1, 0.373, 0.02, 1])
+const Red = new Float32Array([1, 0, 0, 1])
+const Green = new Float32Array([0, 1, 0, 1])
+const Blue = new Float32Array([0, 0, 1, 1])
+const White = new Float32Array([1, 1, 1, 1])
+mainColor = IlliniOrange
+
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
 /** @global global variables for holding size of grid and number of fractures*/
@@ -10,6 +16,12 @@ var fractures;
 
 /** @global grid/terrain */
 terrain = {}
+
+/** @global part 2/optional flags */
+height_color_flag = false
+shiny_flag = false
+rocky_cliffs_flag = false
+spheroid_flag = false
 
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
@@ -157,16 +169,16 @@ function fillGrid(width, height){
           let downright = topleft + width + 2
 
           // combo 1: ALL orange
-          // tri1 = [topright, downleft, topleft] //swap topright and topleft <-> all black
-          // tri2 = [downright, downleft, topright] //swap downright and topright <-> all black
+          tri1 = [topright, downleft, topleft] //swap topright and topleft <-> all black
+          tri2 = [downright, downleft, topright] //swap downright and topright <-> all black
 
           // combo 2: all black
           // tri1 = [topleft, downleft, topright] //swap topright and topleft <-> all black
           // tri2 = [topright, downleft, downright] //swap downright and topright <-> all black
 
           // combo 3: speckled
-          tri1 = [topleft, topright, downleft] //swap topright and downleft
-          tri2 = [topright, downleft, downright] //keep same
+          // tri1 = [topleft, topright, downleft] //swap topright and downleft
+          // tri2 = [topright, downleft, downright] //keep same
           triangles.push(tri1)
           triangles.push(tri2)
       }
@@ -182,9 +194,7 @@ function faultingMethod(fractures){
     a = Math.sin(random)
     b = Math.cos(random)
     c = (Math.random() * (1 - (-1)) - 1).toFixed(4)
-    // console.log("a b c: ", a, b, c)
     for (let j = 0; j < terrain.attributes.position.length; j += 1){
-      // console.log(terrain.attributes.position[j])
       coor_x = terrain.attributes.position[j][0]
       coor_y = terrain.attributes.position[j][1]
       coor_z = terrain.attributes.position[j][2]
@@ -235,14 +245,61 @@ function addNormals(data) {
     normals[i2][2] += n[2]
   }
   for(let i=0; i<normals.length; i+=1) {
-    if (normals[i][0] == 0 && normals[i][1] == 0 && normals[i][2] == 0){
-      console.log("index: ", i)
-      // console.log(data.attributes.position[i])
-    }
     normals[i] = normalize(normals[i])
   }
   data.attributes.normal = normals;
   console.log(data)
+}
+
+function verticalSeperation(data){
+  vert_sep = true
+  if (vert_sep == true){
+    // let arr_x = Object.values(data.attributes.position[0])
+    // let arr_z = Object.values(data.attributes.position[2])
+    x_min = 10
+    x_max = -10
+    z_min = 10
+    z_max = -10
+    for (let i = 0; i < data.attributes.position.length; i += 1){
+      x_min = Math.min(x_min, data.attributes.position[i][0])
+      x_max = Math.max(x_max, data.attributes.position[i][0])
+      z_min = Math.min(z_min, data.attributes.position[i][2])
+      z_max = Math.max(z_max, data.attributes.position[i][2])
+    }
+
+    console.log(z_min)
+    console.log(z_max)
+
+    h = (x_max - x_min)*(0.28)
+    if (h != 0){
+      for (let j = 0; j < data.attributes.position.length; j += 1){
+        z = JSON.parse(JSON.stringify(data.attributes.position[j][2]))
+        data.attributes.position[j][2] = h*(z - z_min)/(z_max - z_min) - h/2
+      }
+    }
+  }
+
+  // if (height_color_ramp_flag == true){
+  if (false){
+    delta = (z_max - z_min) / 5
+    bound1 = z_min + delta
+    bound2 = z_min + delta*2
+    bound3 = z_min + delta*3
+    bound4 = z_min + delta*4
+    for (let j = 0; j < terrain.attributes.position.length; j += 1){
+      z = terrain.attributes.positions[j][2]
+      if (z >= z_min && z < bound1)
+        mainColor = Red
+      else if (z >= bound1 && z < bound2)
+        mainColor = Green
+      else if (z >= bound2 && z < bound3)
+        mainColor = Blue
+      else if (z >= bound3 && z < bound4)
+        mainColor = IlliniOrange
+      else if (z >= bound4 && z < z_max)
+        mainColor = White        
+    }
+  }
 }
 
 /**
@@ -354,7 +411,25 @@ function draw() {
 
     gl.bindVertexArray(geom.vao)
 
+    let lightdir = normalize([0,0,1])
+    let halfway = normalize(add(lightdir, [0,0,1]))
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
+    gl.uniform3fv(gl.getUniformLocation(program, 'halfway'), halfway)
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,.5,1])
+
+    lightdir = normalize([-2,0,1])
+    halfway = normalize(add(lightdir, [0,0,1]))
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightdir2'), lightdir)
+    gl.uniform3fv(gl.getUniformLocation(program, 'halfway2'), halfway)
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor2'), [1,1,1])
+
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
+
+    for (let i = 0; i < terrain.attributes.position.length; i+= 1)
+      gl.uniform3fv(gl.getUniformLocation(program, 'vPosition'), terrain.attributes.position[i])
+    gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
+    gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
+
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
@@ -367,7 +442,7 @@ function timeStep(milliseconds) {
     window.m = m4mul(m4rotY(seconds), m4rotX(-Math.PI/2))
     window.v = m4view([1,1,3], [0,0,0], [0,1,0])
     draw()
-    console.log("timestep + draw")
+    // console.log("timestep + draw")
     requestAnimationFrame(timeStep)
 }
 
@@ -383,7 +458,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(2.0, 10, 1.0, canvas.width, canvas.height)
+        window.p = m4perspNegZ(1.0, 10, 0.79, canvas.width, canvas.height)
     }
 }
 
@@ -397,11 +472,12 @@ async function setup(event) {
     window.program = compileAndLinkGLSL(vs,fs)
     gl.enable(gl.DEPTH_TEST)
     let monkey = await fetch('monkey.json').then(res => res.json())
-    // addNormals(terrain)
     addNormals(monkey)
+
     fillGrid(100, 100)
-    addNormals(terrain)
     faultingMethod(100)
+    addNormals(terrain)
+    verticalSeperation(terrain)
     window.geom = setupGeometry(terrain)
     fillScreen()
     window.addEventListener('resize', fillScreen)
@@ -413,9 +489,23 @@ async function setupScene(scene, options) {
     gridXSize = options.resolution
     gridYSize = options.resolution
     fractures = options.slices
+
+    height_color_flag = options.height_color_ramp
+    shiny_flag = options.shiny
+    spheroid_flag = options.spheroid 
+    rocky_cliffs_flag = options.rocky_slope
+
+    // if (options.shiny == true){
+    //   let vs = await fetch('vertex_shader.glsl').then(res => res.text())
+    //   let fs = await fetch('shiny_phong_frag_shader.glsl').then(res => res.text())
+    //   window.program = compileAndLinkGLSL(vs,fs)
+    //   console.log("phong")
+    // }
+
     fillGrid(gridXSize, gridYSize)
-    addNormals(terrain)
     faultingMethod(fractures)
+    addNormals(terrain)
+    verticalSeperation(terrain)
     window.geom = setupGeometry(terrain)
     fillScreen()
     window.addEventListener('resize', fillScreen)
@@ -430,10 +520,16 @@ async function setupScene(scene, options) {
  * You do not need to understand this code for any part of this class, but
  * its internal comments can help you do so if you are personally interested.
  */
+/**
+ * This function maps the controlOptions to an on-screen form and sends
+ * changes in the on-screen form to the `setupScene` callback. 
+ * 
+ * You do not need to understand this code for any part of this class, but
+ * its internal comments can help you do so if you are personally interested.
+ */
 window.addEventListener('load', event=> {
     let c = document.querySelector('#set1')
     // loop over the key:value pairs in the controlOptions object
-    setup()
     Object.entries(controlOptions).forEach(([key,opt]) => {
         // make a radio button in a label for each item
         let r = document.createElement('input')
@@ -467,6 +563,16 @@ window.addEventListener('load', event=> {
                     })
                     // and select the first radio button by default
                     d.querySelector('input[name="'+key+'"]').click()
+                } else if (opt2.type == 'checkbox') {
+                    let cb = document.createElement('input')
+                    cb.type = opt2.type
+                    cb.name = key
+                    cb.value = key
+                    cb.checked = opt2.default
+                    let lab = document.createElement('label')
+                    lab.append(cb)
+                    lab.append(opt2.label)
+                    d.append(lab)
                 } else {
                     // not a radio, so it's a number, checkbox, or text type
                     // make an appropriate input element and label
@@ -474,8 +580,6 @@ window.addEventListener('load', event=> {
                     num.type = opt2.type
                     num.name = key
                     num.value = opt2.default // for number, text
-                    if (num.value != opt2.default)
-                        num.checked = opt2.default // for checkbox
                     num.step = 'any' // for number; ignored otherwise
                     let lab = document.createElement('label')
                     lab.append(num)
@@ -490,6 +594,7 @@ window.addEventListener('load', event=> {
     
     // register a callback for the button too
     let b = document.querySelector('.controls input[type="submit"]')
+    setup()
     b.addEventListener('click', event => {
         event.preventDefault() // don't send the server a POST action
         // retrieve form data
@@ -503,18 +608,17 @@ window.addEventListener('load', event=> {
             let t = controlOptions[scene].options?.[k]?.['type']
             let d = controlOptions[scene].options?.[k]?.['default']
             if (t == 'number') return [k, Number(v)||d||0]
-            if (t == 'checkbox') return [k, v == 'true']
+            if (t == 'checkbox') return [k, true] // only in formdata if true
             return [k,v]
         }))
         // add any missing options if they have defaults
         if (controlOptions[scene].options) Object.entries(controlOptions[scene].options).forEach(([k,v])=>{
             if (!(k in options)) {
-                 if (v.type == 'checkbox') options[k] = false;
+                 if (v.type == 'checkbox') options[k] = false
                  else if ('default' in v) options[k] = v.default
             }
         })
         // send the result to the scene generating callback function
         setupScene(scene, options)
-        // setup()
     })
 })
