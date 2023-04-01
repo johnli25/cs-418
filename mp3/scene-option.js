@@ -10,9 +10,9 @@ mainColor = IlliniOrange
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
 /** @global global variables for holding size of grid and number of fractures*/
-var gridXSize;
-var gridYSize;
-var fractures;
+var gridXSize = 100;
+var gridYSize = 100;
+var fractures = 100;
 
 /** @global grid/terrain */
 terrain = {}
@@ -261,34 +261,12 @@ function verticalSeperation(data){
     }
     // console.log(z_min)
     // console.log(z_max)
-    h = (x_max - x_min)*(0.28)
+    h = (x_max - x_min)*(0.45)
     if (h != 0){
       for (let j = 0; j < data.attributes.position.length; j += 1){
         z = JSON.parse(JSON.stringify(data.attributes.position[j][2]))
         data.attributes.position[j][2] = h*(z - z_min)/(z_max - z_min) - h/2
       }
-    }
-  }
-
-  // if (height_color_ramp_flag == true){
-  if (false){
-    delta = (z_max - z_min) / 5
-    bound1 = z_min + delta
-    bound2 = z_min + delta*2
-    bound3 = z_min + delta*3
-    bound4 = z_min + delta*4
-    for (let j = 0; j < terrain.attributes.position.length; j += 1){
-      z = terrain.attributes.positions[j][2]
-      if (z >= z_min && z < bound1)
-        mainColor = Red
-      else if (z >= bound1 && z < bound2)
-        mainColor = Green
-      else if (z >= bound2 && z < bound3)
-        mainColor = Blue
-      else if (z >= bound3 && z < bound4)
-        mainColor = IlliniOrange
-      else if (z >= bound4 && z < z_max)
-        mainColor = White        
     }
   }
 }
@@ -418,6 +396,8 @@ function draw() {
 
     // for (let i = 0; i < terrain.attributes.position.length; i+= 1)
     // gl.uniform3fv(gl.getUniformLocation(program, 'vPosition'), window.geom)
+    gl.uniform1f(gl.getUniformLocation(program, 'resolution'), gridXSize)
+
     gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
     gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
 
