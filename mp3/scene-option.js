@@ -1,11 +1,6 @@
 /** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.075, 0.16, 0.292, 1])
 const IlliniOrange = new Float32Array([1, 0.373, 0.02, 1])
-const Red = new Float32Array([1, 0, 0, 1])
-const Green = new Float32Array([0, 1, 0, 1])
-const Blue = new Float32Array([0, 0, 1, 1])
-const White = new Float32Array([1, 1, 1, 1])
-mainColor = IlliniOrange
 
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
@@ -245,28 +240,23 @@ function addNormals(data) {
 }
 
 function verticalSeperation(data){
-  vert_sep = true
-  if (vert_sep == true){
-    // let arr_x = Object.values(data.attributes.position[0])
-    // let arr_z = Object.values(data.attributes.position[2])
-    x_min = 10
-    x_max = -10
-    z_min = 10
-    z_max = -10
-    for (let i = 0; i < data.attributes.position.length; i += 1){
-      x_min = Math.min(x_min, data.attributes.position[i][0])
-      x_max = Math.max(x_max, data.attributes.position[i][0])
-      z_min = Math.min(z_min, data.attributes.position[i][2])
-      z_max = Math.max(z_max, data.attributes.position[i][2])
-    }
-    // console.log(z_min)
-    // console.log(z_max)
-    h = (x_max - x_min)*(0.45)
-    if (h != 0){
-      for (let j = 0; j < data.attributes.position.length; j += 1){
-        z = JSON.parse(JSON.stringify(data.attributes.position[j][2]))
-        data.attributes.position[j][2] = h*(z - z_min)/(z_max - z_min) - h/2
-      }
+  x_min = 10
+  x_max = -10
+  z_min = 10
+  z_max = -10
+  for (let i = 0; i < data.attributes.position.length; i += 1){
+    x_min = Math.min(x_min, data.attributes.position[i][0])
+    x_max = Math.max(x_max, data.attributes.position[i][0])
+    z_min = Math.min(z_min, data.attributes.position[i][2])
+    z_max = Math.max(z_max, data.attributes.position[i][2])
+  }
+  // console.log(z_min)
+  // console.log(z_max)
+  h = (x_max - x_min)*(0.40)
+  if (h != 0){
+    for (let j = 0; j < data.attributes.position.length; j += 1){
+      z = JSON.parse(JSON.stringify(data.attributes.position[j][2]))
+      data.attributes.position[j][2] = h*(z - z_min)/(z_max - z_min) - h/2
     }
   }
 }
@@ -384,7 +374,7 @@ function draw() {
     let halfway = normalize(add(lightdir, [0,0,1]))
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
     gl.uniform3fv(gl.getUniformLocation(program, 'halfway'), halfway)
-    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,.5,1])
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
 
     lightdir = normalize([-2,0,1])
     halfway = normalize(add(lightdir, [0,0,1]))
@@ -394,12 +384,11 @@ function draw() {
 
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
 
-    // for (let i = 0; i < terrain.attributes.position.length; i+= 1)
-    // gl.uniform3fv(gl.getUniformLocation(program, 'vPosition'), window.geom)
     gl.uniform1f(gl.getUniformLocation(program, 'resolution'), gridXSize)
 
     gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
     gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
+    gl.uniform1f(gl.getUniformLocation(program, 'rocky_cliffs_flag'), rocky_cliffs_flag)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
@@ -465,13 +454,6 @@ async function setupScene(scene, options) {
     shiny_flag = options.shiny
     spheroid_flag = options.spheroid 
     rocky_cliffs_flag = options.rocky_slope
-
-    // if (options.shiny == true){
-    //   let vs = await fetch('vertex_shader.glsl').then(res => res.text())
-    //   let fs = await fetch('shiny_phong_frag_shader.glsl').then(res => res.text())
-    //   window.program = compileAndLinkGLSL(vs,fs)
-    //   console.log("phong")
-    // }
 
     fillGrid(gridXSize, gridYSize)
     faultingMethod(fractures)
