@@ -172,13 +172,6 @@ function fillGrid(width, height){
           tri1 = [topright, downleft, topleft] //swap topright and topleft <-> all black
           tri2 = [downright, downleft, topright] //swap downright and topright <-> all black
 
-          // combo 2: all black
-          // tri1 = [topleft, downleft, topright] //swap topright and topleft <-> all black
-          // tri2 = [topright, downleft, downright] //swap downright and topright <-> all black
-
-          // combo 3: speckled
-          // tri1 = [topleft, topright, downleft] //swap topright and downleft
-          // tri2 = [topright, downleft, downright] //keep same
           triangles.push(tri1)
           triangles.push(tri2)
       }
@@ -266,10 +259,8 @@ function verticalSeperation(data){
       z_min = Math.min(z_min, data.attributes.position[i][2])
       z_max = Math.max(z_max, data.attributes.position[i][2])
     }
-
-    console.log(z_min)
-    console.log(z_max)
-
+    // console.log(z_min)
+    // console.log(z_max)
     h = (x_max - x_min)*(0.28)
     if (h != 0){
       for (let j = 0; j < data.attributes.position.length; j += 1){
@@ -425,8 +416,8 @@ function draw() {
 
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
 
-    for (let i = 0; i < terrain.attributes.position.length; i+= 1)
-      gl.uniform3fv(gl.getUniformLocation(program, 'vPosition'), terrain.attributes.position[i])
+    // for (let i = 0; i < terrain.attributes.position.length; i+= 1)
+    // gl.uniform3fv(gl.getUniformLocation(program, 'vPosition'), window.geom)
     gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
     gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
 

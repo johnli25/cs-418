@@ -7,5 +7,6 @@ uniform mat4 p;
 uniform mat4 mv;
 void main() {
     gl_Position = p * mv * position;
+    vPosition = position.xyz;
     outnormal = normal;
 }
