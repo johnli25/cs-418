@@ -42,7 +42,7 @@ void main() {
     float lambert = max(0.0, dot(lightdir, normal));
     // fragColor = vec4((color.rgb * lambert) + vec3(phong, phong, phong)/10.0, color.a);
 
-    // shiny-specular:
+    // shiny-specular: NOTE! 
     float lambert2 = 0.0;
     float blinn = 0.0;
     float blinn2 = 0.0;

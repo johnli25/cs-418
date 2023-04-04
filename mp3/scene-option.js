@@ -261,6 +261,36 @@ function verticalSeperation(data){
   }
 }
 
+function spheroidal_weathering(weathering, width, height){
+  cnt = 0
+  for (let j = 0; j < weathering; j += 1){
+    for (let i = 0; i < terrain.attributes.position.length; i += 1){
+      avg = 0.0;
+      curr_x = i % (width + 1)
+      curr_y = Math.floor(i / (height + 1))
+
+      //calculate avg:
+      console.log("neighbors")
+      for (let x = -3; x < 3; x += 1){
+        for (let y = -3; y < 3; y += 1){
+          x_cor = Math.max(0, Math.min(curr_x + x, width))
+          y_cor = Math.max(0, Math.min(curr_y + y, height))
+          // console.log("x: ", curr_x + x)
+          // console.log("y: ", curr_y + y)
+          console.log(x_cor)
+          console.log(y_cor)
+          avg += terrain.attributes.position[(x_cor)*width + y_cor][2] // z
+        }
+      }
+      avg /= terrain.attributes.position.length
+      console.log(avg)
+      cnt += 1
+      console.log("avgs calculated: ", cnt)
+    }
+  }
+
+}
+
 /**
  * Given the source code of a vertex and fragment shader, compiles them,
  * and returns the linked program.
@@ -389,6 +419,7 @@ function draw() {
     gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
     gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
     gl.uniform1f(gl.getUniformLocation(program, 'rocky_cliffs_flag'), rocky_cliffs_flag)
+    gl.uniform1f(gl.getUniformLocation(program, 'spheroid_flag'), spheroid_flag)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
@@ -459,6 +490,8 @@ async function setupScene(scene, options) {
     faultingMethod(fractures)
     addNormals(terrain)
     verticalSeperation(terrain)
+    spheroidal_weathering(options.spheroid, gridXSize, gridYSize)
+
     window.geom = setupGeometry(terrain)
     fillScreen()
     window.addEventListener('resize', fillScreen)
