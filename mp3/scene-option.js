@@ -277,15 +277,17 @@ function spheroidal_weathering(weathering, width, height){
           y_cor = Math.max(0, Math.min(curr_y + y, height))
           // console.log("x: ", curr_x + x)
           // console.log("y: ", curr_y + y)
-          console.log(x_cor)
-          console.log(y_cor)
+          // console.log(x_cor)
+          // console.log(y_cor)
           avg += terrain.attributes.position[(x_cor)*width + y_cor][2] // z
         }
       }
       avg /= terrain.attributes.position.length
-      console.log(avg)
+      // console.log(avg)
       cnt += 1
-      console.log("avgs calculated: ", cnt)
+      // console.log("avgs calculated: ", cnt)
+      original_z = terrain.attributes.position[i][2]
+      terrain.attributes.position[i][2] = (original_z + avg) / 2
     }
   }
 
