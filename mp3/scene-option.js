@@ -287,7 +287,7 @@ function spheroidal_weathering(weathering, width, height){
       cnt += 1
       // console.log("avgs calculated: ", cnt)
       original_z = terrain.attributes.position[i][2]
-      terrain.attributes.position[i][2] = (original_z + avg) / 2
+      terrain.attributes.position[i][2] = (original_z + avg) * 0.875
     }
   }
 
