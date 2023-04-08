@@ -210,27 +210,27 @@ function addNormals(data) {
     let n = cross(e0,e1)
 
     // loop over x, y and z
-    // for(let j=0; j<3; j+=1) {
-    //     // add a coordinate of a normal to each of the three normals
-    //     normals[i0][j] += n[j]
-    //     normals[i1][j] += n[j]
-    //     normals[i2][j] += n[j]
-    // }
-    temp1 = normals[i0]
-    temp2 = normals[i1]
-    temp3 = normals[i2]
+    for(let j=0; j<3; j+=1) {
+        // add a coordinate of a normal to each of the three normals
+        normals[i0][j] += n[j]
+        normals[i1][j] += n[j]
+        normals[i2][j] += n[j]
+    }
+    // temp1 = normals[i0]
+    // temp2 = normals[i1]
+    // temp3 = normals[i2]
 
-    normals[i0][0] += n[0]
-    normals[i0][1] += n[1]
-    normals[i0][2] += n[2]
+    // normals[i0][0] += n[0]
+    // normals[i0][1] += n[1]
+    // normals[i0][2] += n[2]
 
-    normals[i1][0] += n[0]
-    normals[i1][1] += n[1]
-    normals[i1][2] += n[2]        
+    // normals[i1][0] += n[0]
+    // normals[i1][1] += n[1]
+    // normals[i1][2] += n[2]        
 
-    normals[i2][0] += n[0]
-    normals[i2][1] += n[1]
-    normals[i2][2] += n[2]
+    // normals[i2][0] += n[0]
+    // normals[i2][1] += n[1]
+    // normals[i2][2] += n[2]
   }
   for(let i=0; i<normals.length; i+=1) {
     normals[i] = normalize(normals[i])
@@ -402,8 +402,8 @@ function draw() {
 
     gl.bindVertexArray(geom.vao)
 
-    let lightdir = normalize([0,0,1])
-    let halfway = normalize(add(lightdir, [0,0,1]))
+    let lightdir = normalize([1,1,1])
+    let halfway = normalize(add(lightdir, [0,0,1])) //halfway vector btwn eye and light source
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
     gl.uniform3fv(gl.getUniformLocation(program, 'halfway'), halfway)
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
@@ -414,8 +414,6 @@ function draw() {
     gl.uniform3fv(gl.getUniformLocation(program, 'halfway2'), halfway)
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor2'), [1,1,1])
 
-    gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
-
     gl.uniform1f(gl.getUniformLocation(program, 'resolution'), gridXSize)
 
     gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
@@ -423,8 +421,9 @@ function draw() {
     gl.uniform1f(gl.getUniformLocation(program, 'rocky_cliffs_flag'), rocky_cliffs_flag)
     gl.uniform1f(gl.getUniformLocation(program, 'spheroid_flag'), spheroid_flag)
 
-    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
+    gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
+    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
 
@@ -451,7 +450,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(1.0, 10, 0.79, canvas.width, canvas.height)
+        window.p = m4perspNegZ(0.1, 10, 0.79, canvas.width, canvas.height)
     }
 }
 
@@ -465,7 +464,7 @@ async function setup(event) {
     window.program = compileAndLinkGLSL(vs,fs)
     gl.enable(gl.DEPTH_TEST)
     let monkey = await fetch('monkey.json').then(res => res.json())
-    addNormals(monkey)
+    // addNormals(monkey)
 
     fillGrid(100, 100)
     faultingMethod(100)
@@ -488,6 +487,7 @@ async function setupScene(scene, options) {
     spheroid_flag = options.spheroid 
     rocky_cliffs_flag = options.rocky_slope
 
+    let monkey = await fetch('monkey.json').then(res => res.json())
     fillGrid(gridXSize, gridYSize)
     faultingMethod(fractures)
     addNormals(terrain)

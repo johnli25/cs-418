@@ -1,10 +1,6 @@
 #version 300 es
 precision highp float;
 uniform vec4 color; 
-// const vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
-// const vec3 green = vec4(0.0, 1.0, 0.0);
-// const vec4 blue = vec4(0.0, 0.0, 1.0, 1.0);
-// const vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
 
 uniform bool height_color_ramp_flag;
 uniform bool shiny_flag;
@@ -55,10 +51,10 @@ void main() {
     fragColor = vec4((mainColor.rgb * lambert), color.a); // original (unused atm)
 
     if (shiny_flag == true){
-        lambert = max(dot(lightdir, normal), 0.1); 
-        lambert2 = max(dot(lightdir2, normal), 0.1);
-        blinn = pow(max(dot(halfway, normal), 0.19), 156.9);
-        blinn2 = pow(max(dot(halfway2, normal), 0.420), 140.9);
+        lambert = max(dot(lightdir, normal), 0.0); 
+        lambert2 = max(dot(lightdir2, normal), 0.0);
+        blinn = pow(max(dot(halfway, normal), 0.0), 150.0);
+        blinn2 = pow(max(dot(halfway2, normal), 0.0), 150.0);
     }
     if (height_color_ramp_flag == true){
         uv = gl_FragCoord.xy / resolution;
@@ -74,16 +70,13 @@ void main() {
             vec3 green = vec3(0.0, 1.0, 0.0);
             // vec3 green = vec3(165.0/256.0, 42.0/256.0, 42.0/256.0);
             mainColor += green.rgb;
-            if (shiny_flag == true){
+
+            if (shiny_flag == true){ //DON'T FORGET TO CHANGE SHININESS FOR ROCKY_CLIFFS!!
                 if (normal.z <= 0.27 && normal.z >= -0.27){
-                    lambert = max(dot(lightdir, normal), 0.15); 
-                    lambert2 = max(dot(lightdir2, normal), 0.15);
-                    blinn = pow(max(dot(halfway, normal), 0.01), 7.5);
-                    blinn2 = pow(max(dot(halfway2, normal), 0.020), 7.5);
-                    // lambert = 0.0;
-                    // lambert2 = 0.1;
-                    // blinn = 0.0;
-                    // blinn2 = 0.0;
+                    lambert = max(dot(lightdir, normal), 0.0); 
+                    lambert2 = max(dot(lightdir2, normal), 0.0);
+                    blinn = pow(max(dot(halfway, normal), 0.0), 150.0);
+                    blinn2 = pow(max(dot(halfway2, normal), 0.0), 150.0);
                 }
             }
         }
@@ -91,7 +84,7 @@ void main() {
 
     fragColor = vec4(
         mainColor.rgb * (lightcolor * lambert + lightcolor2 * lambert2)
-        + (lightcolor*blinn + lightcolor2*blinn2)*16.5,
+        + (lightcolor*blinn + lightcolor2*blinn2)*10.5,
         color.a); //'lightcolor' makes the terrain slightly darker red-orange (than orange)
 
     // float lambert = dot(lightdir, normal);

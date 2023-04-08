@@ -8,8 +8,8 @@ uniform mat4 mv;
 uniform bool spheroid_flag;
 void main() {
     gl_Position = p * mv * position;
-    if (spheroid_flag == true)
-        int x = 5; //placeholder
     vPosition = position.xyz;
-    outnormal = normal;
+    outnormal = mat3(mv) * normal; //originally, normals stay constant/not-moving. THAT'S why...
+    // you have to multiply the model-view matrix with the normals, so the normals + light sources
+    // (eye + light) are in motion/changing the output normal vectors!
 }
