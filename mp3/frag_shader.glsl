@@ -50,7 +50,7 @@ void main() {
 
     fragColor = vec4((mainColor.rgb * lambert), color.a); // original (unused atm)
 
-    if (shiny_flag == true){
+    if (shiny_flag == true && rocky_cliffs_flag == false){
         lambert = max(dot(lightdir, normal), 0.0); 
         lambert2 = max(dot(lightdir2, normal), 0.0);
         blinn = pow(max(dot(halfway, normal), 0.0), 150.0);
@@ -65,19 +65,23 @@ void main() {
         mainColor += v_color;
     }
     if (rocky_cliffs_flag == true){
-        if (normal.z <= 0.33 && normal.z >= -0.33){
+        if (normal.z >= 0.80 || normal.z <= -0.80){
             mainColor = vec3(0.0);
             vec3 green = vec3(0.0, 1.0, 0.0);
             // vec3 green = vec3(165.0/256.0, 42.0/256.0, 42.0/256.0);
             mainColor += green.rgb;
-
-            if (shiny_flag == true){ //DON'T FORGET TO CHANGE SHININESS FOR ROCKY_CLIFFS!!
-                if (normal.z <= 0.27 && normal.z >= -0.27){
-                    lambert = max(dot(lightdir, normal), 0.0); 
-                    lambert2 = max(dot(lightdir2, normal), 0.0);
-                    blinn = pow(max(dot(halfway, normal), 0.0), 150.0);
-                    blinn2 = pow(max(dot(halfway2, normal), 0.0), 150.0);
-                }
+        }
+        if (shiny_flag == true){ //DON'T FORGET TO CHANGE SHININESS FOR ROCKY_CLIFFS!!
+            if (normal.z >= 0.70 || normal.z <= -0.70){
+                lambert = max(dot(lightdir, normal), 0.0); 
+                lambert2 = max(dot(lightdir2, normal), 0.0);
+                blinn = pow(max(dot(halfway, normal), 0.0), 150.0);
+                blinn2 = pow(max(dot(halfway2, normal), 0.0), 150.0);
+            } else { // default defuse lighting
+                // lambert = max(0.0, dot(lightdir, normal));
+                // lambert2 = 0.0;
+                // blinn = 0.0;
+                // blinn2 = 0.0;
             }
         }
     }
