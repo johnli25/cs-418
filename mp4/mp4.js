@@ -1,6 +1,6 @@
 /** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.00, 0.16, 0.84, 1])
-const IlliniOrange = new Float32Array([0.5, 0.0, 0.5, 1])
+const IlliniOrange = new Float32Array([0.2, 0.0, 0.8, 1])
 
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
@@ -20,6 +20,7 @@ spheroid_flag = false
 
 /**@global */
 var slot = 0; 
+var image;
 
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
@@ -146,6 +147,7 @@ function fillGrid(width, height){
   let attribute = {}
   let positions = []
   let triangles = []
+  let aTexCoord = []
 
   for (let i = 0; i < width + 1; i += 1){
       for (let j = 0; j < height + 1; j += 1){
@@ -154,6 +156,7 @@ function fillGrid(width, height){
           coordinate[1] = (i - (height / 2)) / ((height / 2))
           coordinate[2] = 0
           positions.push(coordinate)
+          aTexCoord.push(coordinate)
       }
   }
 
@@ -177,6 +180,7 @@ function fillGrid(width, height){
   terrain.attributes = attribute
   terrain.attributes.position = positions
   terrain.triangles = triangles
+  terrain.attributes.aTexCoord = aTexCoord
 }
 
 function faultingMethod(fractures){
@@ -408,28 +412,29 @@ function draw() {
     let lightdir = normalize([0,0,1])
     let halfway = normalize(add(lightdir, [0,0,1]))
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
-    gl.uniform3fv(gl.getUniformLocation(program, 'halfway'), halfway)
-    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
+    // gl.uniform3fv(gl.getUniformLocation(program, 'halfway'), halfway)
+    // gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
 
-    lightdir = normalize([-2,0,1])
-    halfway = normalize(add(lightdir, [0,0,1]))
-    gl.uniform3fv(gl.getUniformLocation(program, 'lightdir2'), lightdir)
-    gl.uniform3fv(gl.getUniformLocation(program, 'halfway2'), halfway)
-    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor2'), [1,1,1])
+    // lightdir = normalize([-2,0,1])
+    // halfway = normalize(add(lightdir, [0,0,1]))
+    // gl.uniform3fv(gl.getUniformLocation(program, 'lightdir2'), lightdir)
+    // gl.uniform3fv(gl.getUniformLocation(program, 'halfway2'), halfway)
+    // gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor2'), [1,1,1])
 
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
 
-    gl.uniform1f(gl.getUniformLocation(program, 'resolution'), gridXSize)
+    // gl.uniform1f(gl.getUniformLocation(program, 'resolution'), gridXSize)
 
-    gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
-    gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
-    gl.uniform1f(gl.getUniformLocation(program, 'rocky_cliffs_flag'), rocky_cliffs_flag)
-    gl.uniform1f(gl.getUniformLocation(program, 'spheroid_flag'), spheroid_flag)
+    // gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
+    // gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
+    // gl.uniform1f(gl.getUniformLocation(program, 'rocky_cliffs_flag'), rocky_cliffs_flag)
+    // gl.uniform1f(gl.getUniformLocation(program, 'spheroid_flag'), spheroid_flag)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
     let bindPoint = gl.getUniformLocation(program, 'aTexCoord')
     gl.uniform1i(bindPoint, slot) // where `slot` is same it was in step 2 above
+    gl.uniform1i(gl.getUniformLocation(program, 'image'), 0)
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
 
@@ -440,7 +445,6 @@ function timeStep(milliseconds) {
     window.m = m4mul(m4rotY(seconds), m4rotX(-Math.PI/2))
     window.v = m4view([1,1,3], [0,0,0], [0,1,0])
     draw()
-    // console.log("timestep + draw")
     requestAnimationFrame(timeStep)
 
 }
@@ -477,11 +481,10 @@ async function setup(event) {
     faultingMethod(100)
     addNormals(terrain)
     verticalSeperation(terrain)
-    window.geom = setupGeometry(terrain)
     fillScreen()
     let img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = 'https://cs418.cs.illinois.edu/website/files/farm.jpg';
+    // img.src = 'https://cs418.cs.illinois.edu/website/files/farm.jpg';
     img.src = 'farm.jpg'
     console.log(img)
     img.addEventListener('load', (event) => {
@@ -490,10 +493,10 @@ async function setup(event) {
         gl.activeTexture(gl.TEXTURE0 + slot);
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
         gl.texImage2D(
             gl.TEXTURE_2D, // destination slot
@@ -505,9 +508,10 @@ async function setup(event) {
         );
         gl.generateMipmap(gl.TEXTURE_2D) // lets you use a mipmapping min filter
     });
+    image = img;
+    window.geom = setupGeometry(terrain)
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
-
 }
 
 async function setupScene(scene, options) {
@@ -644,6 +648,7 @@ window.addEventListener('load', event=> {
     })
 })
 
+// keyboard/camera motion: 
 window.keysBeingPressed = {}
 window.addEventListener('keydown', event => keysBeingPressed[event.key] = true)
 window.addEventListener('keyup', event => keysBeingPressed[event.key] = false)

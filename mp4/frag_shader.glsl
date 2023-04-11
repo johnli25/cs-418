@@ -35,6 +35,6 @@ void main() {
     vec3 normal = normalize(outnormal);
 
     float lambert = max(0.0, dot(lightdir, normal));
-    fragColor = vec4((mainColor.rgb * lambert), color.a); // original (unused atm)
-    fragColor = texture(image, vTexCoord);
+    vec4 textureColor = texture(image, vTexCoord);
+    fragColor = vec4((textureColor.rgb * lambert), 1.0); // original (unused atm)
 }
