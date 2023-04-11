@@ -490,9 +490,9 @@ async function setupScene(scene, options) {
     let monkey = await fetch('monkey.json').then(res => res.json())
     fillGrid(gridXSize, gridYSize)
     faultingMethod(fractures)
+    spheroidal_weathering(options.spheroid, gridXSize, gridYSize)
     addNormals(terrain)
     verticalSeperation(terrain)
-    spheroidal_weathering(options.spheroid, gridXSize, gridYSize)
 
     window.geom = setupGeometry(terrain)
     fillScreen()

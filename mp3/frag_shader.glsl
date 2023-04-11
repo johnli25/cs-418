@@ -7,6 +7,7 @@ uniform bool shiny_flag;
 uniform bool rocky_cliffs_flag;
 
 in vec3 outnormal;
+in vec3 outnormal2;
 in vec3 vPosition;
 
 uniform vec3 eyedir;
@@ -30,6 +31,7 @@ void main() {
     mainColor += (vec3(color));
 
     vec3 normal = normalize(outnormal);
+    vec3 normal2 = normalize(outnormal2);
     vec3 x = normal * dot(normal, lightdir);
 
     // vec3 r = 2.0*x - lightdir;
@@ -65,30 +67,30 @@ void main() {
         mainColor += v_color;
     }
     if (rocky_cliffs_flag == true){
-        if (normal.z >= 0.80 || normal.z <= -0.80){
+        if (normal2.z >= 0.60 || normal2.z <= -0.60){
             mainColor = vec3(0.0);
             vec3 green = vec3(0.0, 1.0, 0.0);
             // vec3 green = vec3(165.0/256.0, 42.0/256.0, 42.0/256.0);
             mainColor += green.rgb;
         }
         if (shiny_flag == true){ //DON'T FORGET TO CHANGE SHININESS FOR ROCKY_CLIFFS!!
-            if (normal.z >= 0.70 || normal.z <= -0.70){
+            if (normal.z >= 0.60 || normal.z <= -0.60){
                 lambert = max(dot(lightdir, normal), 0.0); 
                 lambert2 = max(dot(lightdir2, normal), 0.0);
-                blinn = pow(max(dot(halfway, normal), 0.0), 150.0);
+                blinn = pow(max(dot(halfway, normal), 0.0), 150.0); // 150.0 controls area of shine spots-that's it (NOT how bright it is)
                 blinn2 = pow(max(dot(halfway2, normal), 0.0), 150.0);
-            } else { // default defuse lighting
-                // lambert = max(0.0, dot(lightdir, normal));
-                // lambert2 = 0.0;
-                // blinn = 0.0;
-                // blinn2 = 0.0;
+            } else { // (green) has default defuse lighting
+                lambert = max(dot(lightdir, normal), 0.0); 
+                lambert2 = max(dot(lightdir2, normal), 0.0);
+                blinn = pow(max(dot(halfway, normal), 0.0), 450.0); // 150.0 controls area of shine spots-that's it (NOT how bright it is)
+                blinn2 = pow(max(dot(halfway2, normal), 0.0), 450.0);
             }
         }
     }
 
     fragColor = vec4(
         mainColor.rgb * (lightcolor * lambert + lightcolor2 * lambert2)
-        + (lightcolor*blinn + lightcolor2*blinn2)*10.5,
+        + (lightcolor*blinn + lightcolor2*blinn2)*16.5, // *16.5 controls intensity/how bright
         color.a); //'lightcolor' makes the terrain slightly darker red-orange (than orange)
 
     // float lambert = dot(lightdir, normal);
