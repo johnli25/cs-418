@@ -560,6 +560,9 @@ window.addEventListener('load',(event)=>{
     radioChanged()
 })
 
+/**
+ * event listener for tracking mouse cursor movement/position
+*/
 window.addEventListener('mousemove', function (e) {
     mouseX = e.clientX
     mouseY = e.clientY

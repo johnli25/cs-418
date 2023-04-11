@@ -18,6 +18,9 @@ shiny_flag = false
 rocky_cliffs_flag = false
 spheroid_flag = false
 
+/**@global */
+var slot = 0; 
+
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
 const sub = (x,y) => x.map((e,i)=>e-y[i])
@@ -425,6 +428,8 @@ function draw() {
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
+    let bindPoint = gl.getUniformLocation(program, 'aTexCoord')
+    gl.uniform1i(bindPoint, slot) // where `slot` is same it was in step 2 above
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
 
@@ -477,9 +482,29 @@ async function setup(event) {
     let img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = 'https://cs418.cs.illinois.edu/website/files/farm.jpg';
-    // img.addEventListener('load', (event) => {
-    //     // ...
-    // }; 
+    img.src = 'farm.jpg'
+    console.log(img)
+    img.addEventListener('load', (event) => {
+        slot = 0; // or a larger integer if this isn't the only texture
+        let texture = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0 + slot);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+        gl.texImage2D(
+            gl.TEXTURE_2D, // destination slot
+            0, // the mipmap level this data provides; almost always 0
+            gl.RGBA, // how to store it in graphics memory
+            gl.RGBA, // how it is stored in the image object
+            gl.UNSIGNED_BYTE, // size of a single pixel-color in HTML
+            img, // source data
+        );
+        gl.generateMipmap(gl.TEXTURE_2D) // lets you use a mipmapping min filter
+    });
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
 
