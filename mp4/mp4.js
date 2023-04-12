@@ -12,15 +12,19 @@ var fractures = 100;
 /** @global grid/terrain */
 terrain = {}
 
-/** @global part 2/optional flags */
+/** @global mp3 terrain prettification flags */
 height_color_flag = false
 shiny_flag = false
 rocky_cliffs_flag = false
 spheroid_flag = false
 
-/**@global */
+/**@global slot for texture read port */
 var slot = 0; 
-var image;
+
+/** @global X, Y, and Z position for camera/eye */
+var eyeCameraX = 0;
+var eyeCameraY = 0;
+var eyeCameraZ = 0;
 
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
@@ -282,10 +286,6 @@ function spheroidal_weathering(weathering, width, height){
         for (let y = -3; y < 3; y += 1){
           x_cor = Math.max(0, Math.min(curr_x + x, width))
           y_cor = Math.max(0, Math.min(curr_y + y, height))
-          // console.log("x: ", curr_x + x)
-          // console.log("y: ", curr_y + y)
-          // console.log(x_cor)
-          // console.log(y_cor)
           avg += terrain.attributes.position[(x_cor)*width + y_cor][2] // z
         }
       }
@@ -412,23 +412,8 @@ function draw() {
     let lightdir = normalize([0,0,1])
     let halfway = normalize(add(lightdir, [0,0,1]))
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
-    // gl.uniform3fv(gl.getUniformLocation(program, 'halfway'), halfway)
-    // gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
-
-    // lightdir = normalize([-2,0,1])
-    // halfway = normalize(add(lightdir, [0,0,1]))
-    // gl.uniform3fv(gl.getUniformLocation(program, 'lightdir2'), lightdir)
-    // gl.uniform3fv(gl.getUniformLocation(program, 'halfway2'), halfway)
-    // gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor2'), [1,1,1])
 
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
-
-    // gl.uniform1f(gl.getUniformLocation(program, 'resolution'), gridXSize)
-
-    // gl.uniform1f(gl.getUniformLocation(program, 'height_color_ramp_flag'), height_color_flag)
-    // gl.uniform1f(gl.getUniformLocation(program, 'shiny_flag'), shiny_flag)
-    // gl.uniform1f(gl.getUniformLocation(program, 'rocky_cliffs_flag'), rocky_cliffs_flag)
-    // gl.uniform1f(gl.getUniformLocation(program, 'spheroid_flag'), spheroid_flag)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
@@ -441,9 +426,21 @@ function draw() {
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
-    
+    // console.log(window.keysBeingPressed)
     window.m = m4mul(m4rotY(seconds), m4rotX(-Math.PI/2))
-    window.v = m4view([1,1,3], [0,0,0], [0,1,0])
+    if (keysBeingPressed['W'] || keysBeingPressed['w'])
+        eyeCameraY += 0.04
+    if (keysBeingPressed['A'] || keysBeingPressed['a'])
+        eyeCameraX -= 0.04
+    if (keysBeingPressed['S'] || keysBeingPressed['s'])
+        eyeCameraY -= 0.04
+    if (keysBeingPressed['D'] || keysBeingPressed['d'])
+        eyeCameraX += 0.04
+    if (keysBeingPressed['t'])
+        eyeCameraZ += 0.04
+    if (keysBeingPressed['v'])
+        eyeCameraZ -= 0.04
+    window.v = m4mul(m4trans(eyeCameraX, eyeCameraY, eyeCameraZ), m4view([1,1,3], [0,0,0], [0,1,0]))
     draw()
     requestAnimationFrame(timeStep)
 
@@ -508,7 +505,6 @@ async function setup(event) {
         );
         gl.generateMipmap(gl.TEXTURE_2D) // lets you use a mipmapping min filter
     });
-    image = img;
     window.geom = setupGeometry(terrain)
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
