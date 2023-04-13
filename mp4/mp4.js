@@ -1,6 +1,7 @@
 /** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.00, 0.16, 0.84, 1])
 const IlliniOrange = new Float32Array([0.2, 0.0, 0.8, 1])
+const fogGray = new Float32Array([0.502, 0.502, 0.502, 0.6])
 
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
@@ -25,6 +26,14 @@ var slot = 0;
 var eyeCameraX = 0;
 var eyeCameraY = 0;
 var eyeCameraZ = 0;
+
+/** @global x_angle and y_angle for camera/eye */
+var x_angle = 0;
+var y_angle = 0; 
+
+/** @global toggle between ground and flight mode (vehicular mvmt) */
+var toggleG = false;
+var ground_mode = 0;
 
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
@@ -261,8 +270,6 @@ function verticalSeperation(data){
     z_min = Math.min(z_min, data.attributes.position[i][2])
     z_max = Math.max(z_max, data.attributes.position[i][2])
   }
-  // console.log(z_min)
-  // console.log(z_max)
   h = (x_max - x_min)*(0.40)
   if (h != 0){
     for (let j = 0; j < data.attributes.position.length; j += 1){
@@ -281,7 +288,6 @@ function spheroidal_weathering(weathering, width, height){
       curr_y = Math.floor(i / (height + 1))
 
       //calculate avg:
-      console.log("neighbors")
       for (let x = -3; x < 3; x += 1){
         for (let y = -3; y < 3; y += 1){
           x_cor = Math.max(0, Math.min(curr_x + x, width))
@@ -290,9 +296,7 @@ function spheroidal_weathering(weathering, width, height){
         }
       }
       avg /= terrain.attributes.position.length
-      // console.log(avg)
       cnt += 1
-      // console.log("avgs calculated: ", cnt)
       original_z = terrain.attributes.position[i][2]
       terrain.attributes.position[i][2] = (original_z + avg) * 0.875
     }
@@ -414,6 +418,7 @@ function draw() {
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
 
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
+    gl.uniform4fv(gl.getUniformLocation(program, 'fog_color'), fogGray)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
@@ -423,10 +428,12 @@ function draw() {
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
 
+/** @global */
+var toggleG_cnt = 0;
+
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
-    // console.log(window.keysBeingPressed)
     window.m = m4mul(m4rotY(seconds), m4rotX(-Math.PI/2))
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
         eyeCameraY += 0.04
@@ -440,7 +447,33 @@ function timeStep(milliseconds) {
         eyeCameraZ += 0.04
     if (keysBeingPressed['v'])
         eyeCameraZ -= 0.04
-    window.v = m4mul(m4trans(eyeCameraX, eyeCameraY, eyeCameraZ), m4view([1,1,3], [0,0,0], [0,1,0]))
+    
+    // the signs for rotations are "flipped" for some reason 
+    if (keysBeingPressed['ArrowUp'])
+        x_angle -= 0.04
+    if (keysBeingPressed['ArrowDown'])
+        x_angle += 0.04
+    if (keysBeingPressed['ArrowLeft'])
+        y_angle += 0.04
+    if (keysBeingPressed['ArrowRight'])
+        y_angle -= 0.04
+    
+    // vehicular camera mvmt (toggle between ground and flight)
+    if ((keysBeingPressed['g'] || keysBeingPressed['G']) && (toggleG == false)) {
+        toggleG_cnt += 1 
+        ground_mode = toggleG_cnt % 2
+        toggleG = true
+    } 
+    if ((keysBeingPressed['g']) == false)
+        toggleG = false
+    
+    // 1) rotation around y-axis = move camera left/right 2) rotation around x-axis = move camera up/down
+    if (ground_mode == false){
+        origCameraY = 1
+    } else {
+        origCameraY = (1 - (-1))/gridXSize
+    }
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ), m4view([1,origCameraY,3], [0,0,0], [0,1,0]))
     draw()
     requestAnimationFrame(timeStep)
 
@@ -531,7 +564,6 @@ async function setupScene(scene, options) {
     fillScreen()
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
-    // console.log(terrain)
 }
 
 /**
@@ -648,3 +680,4 @@ window.addEventListener('load', event=> {
 window.keysBeingPressed = {}
 window.addEventListener('keydown', event => keysBeingPressed[event.key] = true)
 window.addEventListener('keyup', event => keysBeingPressed[event.key] = false)
+

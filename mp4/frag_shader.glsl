@@ -3,6 +3,7 @@ precision highp float;
 uniform sampler2D image;
 
 uniform vec4 color; 
+uniform vec4 fog_color;
 
 uniform bool height_color_ramp_flag;
 uniform bool shiny_flag;
@@ -36,5 +37,8 @@ void main() {
 
     float lambert = max(0.0, dot(lightdir, normal));
     vec4 textureColor = texture(image, vTexCoord);
+    // if (gl_FragCoord.z == 0.0)
     fragColor = vec4((textureColor.rgb * lambert), 1.0); // original (unused atm)
+    // if (gl_FragCoord.z == 1.0)
+        // fragColor = vec4((fog_color.rgb * lambert), 0.502);
 }
