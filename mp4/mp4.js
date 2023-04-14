@@ -34,6 +34,12 @@ var y_angle = 0;
 /** @global toggle between ground and flight mode (vehicular mvmt) */
 var toggleG = false;
 var ground_mode = 0;
+var toggleG_cnt = 0;
+
+/** @global toggle between fog and no-fog mode */
+var toggleF = false;
+var fog_mode = 0;
+var toggleF_cnt = 0;
 
 // vector ops
 const add = (x,y) => x.map((e,i)=>e+y[i])
@@ -422,14 +428,23 @@ function draw() {
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
+
+    // toggle fog
+    if ((keysBeingPressed['f'] || keysBeingPressed['F']) && (toggleF == false)) {
+      toggleF_cnt += 1
+      fog_mode = toggleF_cnt % 2
+      toggleF = true
+    }
+    if ((keysBeingPressed['f']) == false)
+      toggleF = false
+
+    gl.uniform1f(gl.getUniformLocation(program, 'fog_mode'), fog_mode)
+
     let bindPoint = gl.getUniformLocation(program, 'aTexCoord')
     gl.uniform1i(bindPoint, slot) // where `slot` is same it was in step 2 above
     gl.uniform1i(gl.getUniformLocation(program, 'image'), 0)
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
-
-/** @global */
-var toggleG_cnt = 0;
 
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
@@ -468,10 +483,12 @@ function timeStep(milliseconds) {
     
     // 1) rotation around y-axis = move camera left/right 2) rotation around x-axis = move camera up/down
     if (ground_mode == false){
-        origCameraY = 1.5
+        origCameraY = 1.33
     } else {
         origCameraY = (1 - (-1))/gridXSize
+        console.log("ground logic on")
     }
+    
     window.m = m4mul(m4rotX(-Math.PI/2), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ))
     window.v = m4mul(m4rotY(Math.max(Math.min(y_angle, 1.0), -1.0)), m4rotX(Math.max(Math.min(x_angle, 0.5), -0.5)), m4view([0,origCameraY,2], [0,0,0], [0,1,0]))
     draw()

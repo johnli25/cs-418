@@ -8,6 +8,7 @@ uniform vec4 fog_color;
 uniform bool height_color_ramp_flag;
 uniform bool shiny_flag;
 uniform bool rocky_cliffs_flag;
+uniform bool fog_mode;
 
 in vec3 outnormal;
 in vec3 vPosition;
@@ -37,8 +38,13 @@ void main() {
 
     float lambert = max(0.0, dot(lightdir, normal));
     vec4 textureColor = texture(image, vTexCoord);
-    // if (gl_FragCoord.z == 0.0)
-    fragColor = vec4((textureColor.rgb * lambert), 1.0); // original (unused atm)
-    // if (gl_FragCoord.z == 1.0)
-        // fragColor = vec4((fog_color.rgb * lambert), 0.502);
+    vec3 newTextureColor = vec3(0.0);
+    vec4 gray_fog = vec4(0.0, 0.0, 0.0, 0.0);
+    float alpha = 1.0;
+    if (fog_mode == true){
+        // vec4 gray_fog = vec4(0.502, 0.502, 0.502, 0.502);
+        // newTextureColor += mix(textureColor.rgb, gray_fog.rgb, gl_FragCoord.z);
+        alpha = gl_FragCoord.z;
+    }
+    fragColor = vec4((textureColor.rgb * lambert), alpha); // original (unused atm)
 }
