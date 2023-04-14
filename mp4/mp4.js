@@ -434,13 +434,12 @@ var toggleG_cnt = 0;
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
-    window.m = m4mul(m4rotY(0), m4rotX(-Math.PI/2))
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
-        eyeCameraZ += 0.04
+        eyeCameraY -= 0.04
     if (keysBeingPressed['A'] || keysBeingPressed['a'])
         eyeCameraX -= 0.04
     if (keysBeingPressed['S'] || keysBeingPressed['s'])
-        eyeCameraZ -= 0.04
+        eyeCameraY += 0.04
     if (keysBeingPressed['D'] || keysBeingPressed['d'])
         eyeCameraX += 0.04
     // if (keysBeingPressed['t'])
@@ -469,11 +468,12 @@ function timeStep(milliseconds) {
     
     // 1) rotation around y-axis = move camera left/right 2) rotation around x-axis = move camera up/down
     if (ground_mode == false){
-        origCameraY = 3
+        origCameraY = 1.5
     } else {
         origCameraY = (1 - (-1))/gridXSize
     }
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ), m4view([0,origCameraY,3], [0,0,0], [0,1,0]))
+    window.m = m4mul(m4rotX(-Math.PI/2), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ))
+    window.v = m4mul(m4rotY(Math.max(Math.min(y_angle, 1.0), -1.0)), m4rotX(Math.max(Math.min(x_angle, 0.5), -0.5)), m4view([0,origCameraY,2], [0,0,0], [0,1,0]))
     draw()
     requestAnimationFrame(timeStep)
 }
@@ -490,7 +490,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(1.0, 10, 0.79, canvas.width, canvas.height)
+        window.p = m4perspNegZ(1.0, 100.0, 0.79, canvas.width, canvas.height)
     }
 }
 
