@@ -434,19 +434,19 @@ var toggleG_cnt = 0;
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
-    window.m = m4mul(m4rotY(seconds), m4rotX(-Math.PI/2))
+    window.m = m4mul(m4rotY(0), m4rotX(-Math.PI/2))
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
-        eyeCameraY += 0.04
+        eyeCameraZ += 0.04
     if (keysBeingPressed['A'] || keysBeingPressed['a'])
         eyeCameraX -= 0.04
     if (keysBeingPressed['S'] || keysBeingPressed['s'])
-        eyeCameraY -= 0.04
+        eyeCameraZ -= 0.04
     if (keysBeingPressed['D'] || keysBeingPressed['d'])
         eyeCameraX += 0.04
-    if (keysBeingPressed['t'])
-        eyeCameraZ += 0.04
-    if (keysBeingPressed['v'])
-        eyeCameraZ -= 0.04
+    // if (keysBeingPressed['t'])
+    //     eyeCameraZ += 0.04
+    // if (keysBeingPressed['v'])
+    //     eyeCameraZ -= 0.04
     
     // the signs for rotations are "flipped" for some reason 
     if (keysBeingPressed['ArrowUp'])
@@ -469,14 +469,13 @@ function timeStep(milliseconds) {
     
     // 1) rotation around y-axis = move camera left/right 2) rotation around x-axis = move camera up/down
     if (ground_mode == false){
-        origCameraY = 1
+        origCameraY = 3
     } else {
         origCameraY = (1 - (-1))/gridXSize
     }
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ), m4view([1,origCameraY,3], [0,0,0], [0,1,0]))
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ), m4view([0,origCameraY,3], [0,0,0], [0,1,0]))
     draw()
     requestAnimationFrame(timeStep)
-
 }
 
 /** Resizes the canvas to completely fill the screen */
@@ -543,138 +542,7 @@ async function setup(event) {
     requestAnimationFrame(timeStep)
 }
 
-async function setupScene(scene, options) {
-    console.log("To do: render",scene,"with options",options)
-    gridXSize = options.resolution
-    gridYSize = options.resolution
-    fractures = options.slices
-
-    height_color_flag = options.height_color_ramp
-    shiny_flag = options.shiny
-    spheroid_flag = options.spheroid 
-    rocky_cliffs_flag = options.rocky_slope
-
-    fillGrid(gridXSize, gridYSize)
-    faultingMethod(fractures)
-    addNormals(terrain)
-    verticalSeperation(terrain)
-    spheroidal_weathering(options.spheroid, gridXSize, gridYSize)
-
-    window.geom = setupGeometry(terrain)
-    fillScreen()
-    window.addEventListener('resize', fillScreen)
-    requestAnimationFrame(timeStep)
-}
-
-/**
- * This function maps the controlOptions to an on-screen form and sends
- * changes in the on-screen form to the `setupScene` callback. 
- * 
- * You do not need to understand this code for any part of this class, but
- * its internal comments can help you do so if you are personally interested.
- */
-/**
- * This function maps the controlOptions to an on-screen form and sends
- * changes in the on-screen form to the `setupScene` callback. 
- * 
- * You do not need to understand this code for any part of this class, but
- * its internal comments can help you do so if you are personally interested.
- */
-window.addEventListener('load', event=> {
-    let c = document.querySelector('#set1')
-    // loop over the key:value pairs in the controlOptions object
-    Object.entries(controlOptions).forEach(([key,opt]) => {
-        // make a radio button in a label for each item
-        let r = document.createElement('input')
-        r.type = 'radio'
-        r.name = 'controlOptions'
-        r.value = key
-        let l = document.createElement('label')
-        l.append(r)
-        l.append(' ' + opt.label)
-        c.append(l)
-        // also listen for the radio button being selected to configure options
-        r.addEventListener('change', event => {
-            let k = event.target.value
-            // erase any options from previous selections
-            let d = document.querySelector('#set2')
-            while (d.firstChild) d.firstChild.remove()
-            // loop over each of the selected item's options
-            if (opt.options) Object.entries(opt.options).forEach(([key,opt2]) => {
-                if (opt2.type == 'radio') {
-                    // if it's a radio-type, it's actually a list of options;
-                    Object.entries(opt2.options).forEach(([v,l]) => {
-                        // make one radio button and label for option
-                        let rb = document.createElement('input')
-                        rb.type = 'radio'
-                        rb.name = key
-                        rb.value = v
-                        let lab = document.createElement('label')
-                        lab.append(rb)
-                        lab.append(l)
-                        d.append(lab)
-                    })
-                    // and select the first radio button by default
-                    d.querySelector('input[name="'+key+'"]').click()
-                } else if (opt2.type == 'checkbox') {
-                    let cb = document.createElement('input')
-                    cb.type = opt2.type
-                    cb.name = key
-                    cb.value = key
-                    cb.checked = opt2.default
-                    let lab = document.createElement('label')
-                    lab.append(cb)
-                    lab.append(opt2.label)
-                    d.append(lab)
-                } else {
-                    // not a radio, so it's a number, checkbox, or text type
-                    // make an appropriate input element and label
-                    let num = document.createElement('input')
-                    num.type = opt2.type
-                    num.name = key
-                    num.value = opt2.default // for number, text
-                    num.step = 'any' // for number; ignored otherwise
-                    let lab = document.createElement('label')
-                    lab.append(num)
-                    lab.append(opt2.label)
-                    d.append(lab)
-                }
-            })
-        })
-    })
-    // select the first radio button by default
-    c.querySelector('input[type="radio"]').click()
-    
-    // register a callback for the button too
-    let b = document.querySelector('.controls input[type="submit"]')
-    setup()
-    b.addEventListener('click', event => {
-        event.preventDefault() // don't send the server a POST action
-        // retrieve form data
-        let form = document.querySelector('form')
-        let data = new FormData(form)
-        // extract and delete the top-level form item
-        let scene = data.get('controlOptions')
-        data.delete('controlOptions')
-        // copy other content, converting number types and adding defaults as needed
-        let options = Object.fromEntries(Array.from(data.entries()).map(([k,v])=>{
-            let t = controlOptions[scene].options?.[k]?.['type']
-            let d = controlOptions[scene].options?.[k]?.['default']
-            if (t == 'number') return [k, Number(v)||d||0]
-            if (t == 'checkbox') return [k, true] // only in formdata if true
-            return [k,v]
-        }))
-        // add any missing options if they have defaults
-        if (controlOptions[scene].options) Object.entries(controlOptions[scene].options).forEach(([k,v])=>{
-            if (!(k in options)) {
-                 if (v.type == 'checkbox') options[k] = false
-                 else if ('default' in v) options[k] = v.default
-            }
-        })
-        // send the result to the scene generating callback function
-        setupScene(scene, options)
-    })
-})
+window.addEventListener('load', setup)
 
 // keyboard/camera motion: 
 window.keysBeingPressed = {}
