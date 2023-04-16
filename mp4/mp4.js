@@ -1,6 +1,6 @@
 /** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.00, 0.16, 0.84, 1])
-const IlliniOrange = new Float32Array([0.2, 0.0, 0.8, 1])
+const IlliniOrange = new Float32Array([232.0/256.0, 74.0/256.0, 39.0/256.0, 1])
 const fogGray = new Float32Array([0.502, 0.502, 0.502, 0.6])
 
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
@@ -14,11 +14,8 @@ var fractures = 100;
 terrain = {}
 example = {}
 
-/** @global mp3 terrain prettification flags */
-height_color_flag = false
-shiny_flag = false
-rocky_cliffs_flag = false
-spheroid_flag = false
+/** @global obj flags */
+vtx_color_flag = false;
 
 /**@global slot for texture read port */
 var slot = 0; 
@@ -277,11 +274,10 @@ function verticalSeperation(data){
     z_min = Math.min(z_min, data.attributes.position[i][2])
     z_max = Math.max(z_max, data.attributes.position[i][2])
   }
-  console.log(z_max)
-  h = (x_max - x_min)*(0.40)
+  h = (x_max - x_min)*(0.26)
   if (h != 0){
     for (let j = 0; j < data.attributes.position.length; j += 1){
-      z = JSON.parse(JSON.stringify(data.attributes.position[j][2]))
+      z = data.attributes.position[j][2]
       data.attributes.position[j][2] = h*(z - z_min)/(z_max - z_min) - h/2
     }
   }
@@ -311,32 +307,51 @@ function spheroidal_weathering(weathering, width, height){
   }
 }
 
-function setupExample(exampleInput){
+async function setupExample(){
+  // filling in example = {} starts here:
+  exampleInput = await fetch('cow.obj').then(res => res.text())
   let attributes = {}
   let positions = []
   let triangles = []
-  // console.log((example[0]))
-  // console.log(example)
+  let vertex_colors = []
   let lines = exampleInput.split("\n");
-  // lines = example.split("\r")
   for (let i = 0; i < lines.length; i++){
     let line = lines[i]
+    let line_split_trim = line.split(' ').map(item=>item.trim())
+
+    // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
+    let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
+
     if (line[0] == '#')
       continue
     if (line[0] == 'v'){
-      let line_split_trim = line.split(' ').map(item=>item.trim())
-
-      // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
-      let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
       let obj_vertex = new Array();
-      obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
-      obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
-      obj_vertex.push(parseFloat(line_split_trim_filtered[3]))
+      obj_vertex.push(parseFloat(2*line_split_trim_filtered[1]))
+      obj_vertex.push(parseFloat(1.3*line_split_trim_filtered[2]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[3] + 0.35))
       positions.push(obj_vertex)
+      // vtx_color_flag = false // reset if necessary
+      if (line_split_trim_filtered.length == 7){
+        vtx_color_flag = true;
+        console.log("yo", line_split_trim_filtered)
+        let obj_vertex_color = new Array()
+        obj_vertex_color.push(parseFloat(line_split_trim_filtered[4]))
+        obj_vertex_color.push(parseFloat(line_split_trim_filtered[5]))
+        obj_vertex_color.push(parseFloat(line_split_trim_filtered[6]))
+        vertex_colors.push(obj_vertex_color)
+      } else {
+        let obj_vertex_color = new Array([IlliniOrange[0], IlliniOrange[1], IlliniOrange[2]]) // IlliniOrange
+        vertex_colors.push(obj_vertex_color)
+      }
     }
 
     if (line[0] == 'f'){
-      continue
+      let triangle = new Array();
+      triangle.push(parseFloat(line_split_trim_filtered[1]))
+      triangle.push(parseFloat(line_split_trim_filtered[2]))
+      triangle.push(parseFloat(line_split_trim_filtered[3]))
+      triangles.push(triangle)
+      console.log("tri")
     }
       
     if (line[0] == 'vn')
@@ -347,8 +362,20 @@ function setupExample(exampleInput){
   }
   example.attributes = attributes
   example.attributes.position = positions
-  // example.triangles = triangles
-  console.log(example)
+  example.triangles = triangles
+  example.attributes.vertex_color = vertex_colors
+  console.log("example", example)
+
+  window.gl = document.querySelector('canvas').getContext('webgl2',
+    // optional configuration object: see https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    {antialias: false, depth:true, preserveDrawingBuffer:true}
+  )
+  let vs = await fetch('vertex_obj_shader.glsl').then(res => res.text())
+  let fs = await fetch('frag_obj_shader.glsl').then(res => res.text())
+  window.programExample = compileAndLinkGLSL(vs,fs)
+  gl.enable(gl.DEPTH_TEST)
+  window.exampleGeom = setupGeometryExample(example)
+  requestAnimationFrame(drawExample)
 }
 
 /**
@@ -403,6 +430,7 @@ function supplyDataBuffer(data, program, vsIn, mode) {
     gl.bufferData(gl.ARRAY_BUFFER, f32, mode)
     
     let loc = gl.getAttribLocation(program, vsIn)
+    console.log(data)
     gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(loc)
     
@@ -450,6 +478,45 @@ function setupGeometry(geom) {
     }
 }
 
+function setupGeometryExample(geom) {
+  var triangleArray = gl.createVertexArray()
+  gl.bindVertexArray(triangleArray)
+
+  for(let name in geom.attributes) {
+      let data = geom.attributes[name]
+      supplyDataBuffer(data, programExample, name)
+  }
+
+  var indices = new Uint16Array(geom.triangles.flat())
+  var indexBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
+
+  return {
+      mode: gl.TRIANGLES,
+      count: indices.length,
+      type: gl.UNSIGNED_SHORT,
+      vao: triangleArray
+  }
+}
+
+function drawExample(milliseconds){
+  let seconds = milliseconds / 1000
+  gl.useProgram(programExample)
+
+  gl.bindVertexArray(exampleGeom.vao)  // and the buffers
+  gl.uniform4fv(gl.getUniformLocation(programExample, 'color'), IlliniOrange)
+  // gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
+  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
+  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.m))
+
+  gl.drawElements(exampleGeom.mode, exampleGeom.count, exampleGeom.type, 0) // then draw things
+
+  // window.m = m4mul(m4rotX(-Math.PI/2))
+  // window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [0,0.5,0], [0,1,0]))
+  window.pending = requestAnimationFrame(drawExample)
+}
+
 /**
  * Draw one frame
  */
@@ -468,7 +535,7 @@ function draw() {
     gl.uniform4fv(gl.getUniformLocation(program, 'fog_color'), fogGray)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
-    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v,m))
+    gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v, m))
 
     // toggle fog
     if ((keysBeingPressed['f'] || keysBeingPressed['F']) && (toggleF == false)) {
@@ -491,22 +558,22 @@ function draw() {
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
-        eyeCameraZ += 0.02
+        eyeCameraZ += 0.015
     if (keysBeingPressed['A'] || keysBeingPressed['a'])
-        eyeCameraX += 0.02
+        eyeCameraX += 0.015
     if (keysBeingPressed['S'] || keysBeingPressed['s'])
-        eyeCameraZ -= 0.02
+        eyeCameraZ -= 0.015
     if (keysBeingPressed['D'] || keysBeingPressed['d'])
-        eyeCameraX -= 0.02
+        eyeCameraX -= 0.015
     
     // the signs for rotations are "flipped" for some reason 
-    if (keysBeingPressed['ArrowUp'])
+    if (keysBeingPressed['arrowup'])
         x_angle -= 0.04
-    if (keysBeingPressed['ArrowDown'])
+    if (keysBeingPressed['arrowdown'])
         x_angle += 0.04
-    if (keysBeingPressed['ArrowLeft'])
+    if (keysBeingPressed['arrowleft'])
         y_angle += 0.04
-    if (keysBeingPressed['ArrowRight'])
+    if (keysBeingPressed['arrowright'])
         y_angle -= 0.04
     y_angle = Math.max(Math.min(y_angle, 1.0), -1.0)
     x_angle = Math.max(Math.min(x_angle, 0.5), -0.5)
@@ -532,21 +599,22 @@ function timeStep(milliseconds) {
       coor_y = terrain.attributes.position[j][1]
       if (coor_x == view_x && coor_y == view_z_y){
         coor_z = terrain.attributes.position[j][2]
-        console.log(coor_z)
+        // console.log(coor_z)
         break
       }
     }
-    
+
+    // if ground_mode enabled, udpate view matrix with correct height (terrain height + offset)
     if (ground_mode == true) {
       window.v = m4mul(m4trans(0, coor_z + (1- (-1))/gridXSize, 0), window.v)
     }
     draw()
     requestAnimationFrame(timeStep)
-    if (keysBeingPressed['w'] || keysBeingPressed['s'] ||  keysBeingPressed['a'] || keysBeingPressed['d']){
-      console.log("view", window.v) 
-      console.log("view_x:", view_x)
-      console.log("view z y ", view_z_y)
-    }
+    // if (keysBeingPressed['w'] || keysBeingPressed['s'] ||  keysBeingPressed['a'] || keysBeingPressed['d']){
+    //   console.log("view", window.v) 
+    //   console.log("view_x:", view_x)
+    //   console.log("view z y ", view_z_y)
+    // }
 }
 
 /** Resizes the canvas to completely fill the screen */
@@ -561,7 +629,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(1.0, 100.0, 0.79, canvas.width, canvas.height)
+        window.p = m4perspNegZ(1.0, 100.0, 0.69, canvas.width, canvas.height)
     }
 }
 
@@ -574,8 +642,6 @@ async function setup(event) {
     let fs = await fetch('frag_shader.glsl').then(res => res.text())
     window.program = compileAndLinkGLSL(vs,fs)
     gl.enable(gl.DEPTH_TEST)
-    // let monkey = await fetch('monkey.json').then(res => res.json())
-    // addNormals(monkey)
 
     fillGrid(100, 100)
     faultingMethod(100)
@@ -609,17 +675,15 @@ async function setup(event) {
         gl.generateMipmap(gl.TEXTURE_2D) // lets you use a mipmapping min filter
     });
     window.geom = setupGeometry(terrain)
-    example_obj = await fetch('example.obj').then(res => res.text())
-
-    setupExample(example_obj)
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
 }
 
 window.addEventListener('load', setup)
+window.addEventListener('load', setupExample)
 
 // keyboard/camera motion: 
 window.keysBeingPressed = {}
-window.addEventListener('keydown', event => keysBeingPressed[event.key] = true)
-window.addEventListener('keyup', event => keysBeingPressed[event.key] = false)
+window.addEventListener('keydown', event => keysBeingPressed[event.key.toLowerCase()] = true)
+window.addEventListener('keyup', event => keysBeingPressed[event.key.toLowerCase()] = false)
 
