@@ -12,6 +12,7 @@ var fractures = 100;
 
 /** @global grid/terrain */
 terrain = {}
+example = {}
 
 /** @global mp3 terrain prettification flags */
 height_color_flag = false
@@ -276,6 +277,7 @@ function verticalSeperation(data){
     z_min = Math.min(z_min, data.attributes.position[i][2])
     z_max = Math.max(z_max, data.attributes.position[i][2])
   }
+  console.log(z_max)
   h = (x_max - x_min)*(0.40)
   if (h != 0){
     for (let j = 0; j < data.attributes.position.length; j += 1){
@@ -307,7 +309,46 @@ function spheroidal_weathering(weathering, width, height){
       terrain.attributes.position[i][2] = (original_z + avg) * 0.875
     }
   }
+}
 
+function setupExample(exampleInput){
+  let attributes = {}
+  let positions = []
+  let triangles = []
+  // console.log((example[0]))
+  // console.log(example)
+  let lines = exampleInput.split("\n");
+  // lines = example.split("\r")
+  for (let i = 0; i < lines.length; i++){
+    let line = lines[i]
+    if (line[0] == '#')
+      continue
+    if (line[0] == 'v'){
+      let line_split_trim = line.split(' ').map(item=>item.trim())
+
+      // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
+      let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
+      let obj_vertex = new Array();
+      obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[3]))
+      positions.push(obj_vertex)
+    }
+
+    if (line[0] == 'f'){
+      continue
+    }
+      
+    if (line[0] == 'vn')
+      continue
+    if (line[0] == 'vt')
+      continue
+
+  }
+  example.attributes = attributes
+  example.attributes.position = positions
+  // example.triangles = triangles
+  console.log(example)
 }
 
 /**
@@ -450,17 +491,13 @@ function draw() {
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
-        eyeCameraY -= 0.04
+        eyeCameraZ += 0.02
     if (keysBeingPressed['A'] || keysBeingPressed['a'])
-        eyeCameraX -= 0.04
+        eyeCameraX += 0.02
     if (keysBeingPressed['S'] || keysBeingPressed['s'])
-        eyeCameraY += 0.04
+        eyeCameraZ -= 0.02
     if (keysBeingPressed['D'] || keysBeingPressed['d'])
-        eyeCameraX += 0.04
-    // if (keysBeingPressed['t'])
-    //     eyeCameraZ += 0.04
-    // if (keysBeingPressed['v'])
-    //     eyeCameraZ -= 0.04
+        eyeCameraX -= 0.02
     
     // the signs for rotations are "flipped" for some reason 
     if (keysBeingPressed['ArrowUp'])
@@ -471,6 +508,8 @@ function timeStep(milliseconds) {
         y_angle += 0.04
     if (keysBeingPressed['ArrowRight'])
         y_angle -= 0.04
+    y_angle = Math.max(Math.min(y_angle, 1.0), -1.0)
+    x_angle = Math.max(Math.min(x_angle, 0.5), -0.5)
     
     // vehicular camera mvmt (toggle between ground and flight)
     if ((keysBeingPressed['g'] || keysBeingPressed['G']) && (toggleG == false)) {
@@ -480,19 +519,34 @@ function timeStep(milliseconds) {
     } 
     if ((keysBeingPressed['g']) == false)
         toggleG = false
-    
-    // 1) rotation around y-axis = move camera left/right 2) rotation around x-axis = move camera up/down
-    if (ground_mode == false){
-        origCameraY = 1.33
-    } else {
-        origCameraY = (1 - (-1))/gridXSize
-        console.log("ground logic on")
+
+    window.m = m4mul(m4rotX(-Math.PI/2))
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [0,0.5,0], [0,1,0]))
+    // window.v = m4view([0,origCameraY,2], [0,0,0], [0,1,0])
+
+    //grab view x,y,z coords and round them appropriately
+    view_x = Math.round(window.v[12] * 50) / 50.0
+    view_z_y = Math.round((window.v[14] + 1)*50)/ 50.0 // can be interpreted as z or y in camera view coords. Also +1 offset
+    for (let j = 0; j < terrain.attributes.position.length; j += 1){
+      coor_x = terrain.attributes.position[j][0]
+      coor_y = terrain.attributes.position[j][1]
+      if (coor_x == view_x && coor_y == view_z_y){
+        coor_z = terrain.attributes.position[j][2]
+        console.log(coor_z)
+        break
+      }
     }
     
-    window.m = m4mul(m4rotX(-Math.PI/2), m4trans(eyeCameraX, eyeCameraY, eyeCameraZ))
-    window.v = m4mul(m4rotY(Math.max(Math.min(y_angle, 1.0), -1.0)), m4rotX(Math.max(Math.min(x_angle, 0.5), -0.5)), m4view([0,origCameraY,2], [0,0,0], [0,1,0]))
+    if (ground_mode == true) {
+      window.v = m4mul(m4trans(0, coor_z + (1- (-1))/gridXSize, 0), window.v)
+    }
     draw()
     requestAnimationFrame(timeStep)
+    if (keysBeingPressed['w'] || keysBeingPressed['s'] ||  keysBeingPressed['a'] || keysBeingPressed['d']){
+      console.log("view", window.v) 
+      console.log("view_x:", view_x)
+      console.log("view z y ", view_z_y)
+    }
 }
 
 /** Resizes the canvas to completely fill the screen */
@@ -555,6 +609,9 @@ async function setup(event) {
         gl.generateMipmap(gl.TEXTURE_2D) // lets you use a mipmapping min filter
     });
     window.geom = setupGeometry(terrain)
+    example_obj = await fetch('example.obj').then(res => res.text())
+
+    setupExample(example_obj)
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
 }

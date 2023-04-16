@@ -44,7 +44,7 @@ void main() {
     if (fog_mode == true){
         // vec4 gray_fog = vec4(0.502, 0.502, 0.502, 0.502);
         // newTextureColor += mix(textureColor.rgb, gray_fog.rgb, gl_FragCoord.z);
-        alpha = gl_FragCoord.z;
+        alpha = 1.70*(1.0 - gl_FragCoord.z); // "flip" it so it's foggier when you're farther away and less foggy when close
     }
     fragColor = vec4((textureColor.rgb * lambert), alpha); // original (unused atm)
 }
