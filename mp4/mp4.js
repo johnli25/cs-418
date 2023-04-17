@@ -308,8 +308,12 @@ function spheroidal_weathering(weathering, width, height){
 }
 
 async function setupExample(){
-  // filling in example = {} starts here:
-  exampleInput = await fetch('cow.obj').then(res => res.text())
+
+  inputString = window.location.hash.substr(1)
+  if (!inputString)
+    inputString = 'example.obj'
+
+  exampleInput = await fetch(inputString).then(res => res.text())
   let attributes = {}
   let positions = []
   let triangles = []
@@ -330,10 +334,10 @@ async function setupExample(){
       obj_vertex.push(parseFloat(1.3*line_split_trim_filtered[2]))
       obj_vertex.push(parseFloat(line_split_trim_filtered[3] + 0.35))
       positions.push(obj_vertex)
-      // vtx_color_flag = false // reset if necessary
+      vtx_color_flag = false // reset if necessary
       if (line_split_trim_filtered.length == 7){
         vtx_color_flag = true;
-        console.log("yo", line_split_trim_filtered)
+        // console.log("yo", line_split_trim_filtered)
         let obj_vertex_color = new Array()
         obj_vertex_color.push(parseFloat(line_split_trim_filtered[4]))
         obj_vertex_color.push(parseFloat(line_split_trim_filtered[5]))
@@ -506,7 +510,8 @@ function drawExample(milliseconds){
 
   gl.bindVertexArray(exampleGeom.vao)  // and the buffers
   gl.uniform4fv(gl.getUniformLocation(programExample, 'color'), IlliniOrange)
-  // gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
+  gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
+  console.log(vtx_color_flag)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.m))
 
@@ -681,6 +686,7 @@ async function setup(event) {
 
 window.addEventListener('load', setup)
 window.addEventListener('load', setupExample)
+window.addEventListener('hashchange', setupExample)
 
 // keyboard/camera motion: 
 window.keysBeingPressed = {}
