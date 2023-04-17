@@ -308,12 +308,13 @@ function spheroidal_weathering(weathering, width, height){
 }
 
 async function setupExample(){
-
   inputString = window.location.hash.substr(1)
   if (!inputString)
     inputString = 'example.obj'
 
   exampleInput = await fetch(inputString).then(res => res.text())
+  if (!exampleInput) // if exampleInput == empty string
+    return
   let attributes = {}
   let positions = []
   let triangles = []
@@ -330,8 +331,8 @@ async function setupExample(){
       continue
     if (line[0] == 'v'){
       let obj_vertex = new Array();
-      obj_vertex.push(parseFloat(2*line_split_trim_filtered[1]))
-      obj_vertex.push(parseFloat(1.3*line_split_trim_filtered[2]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
       obj_vertex.push(parseFloat(line_split_trim_filtered[3] + 0.35))
       positions.push(obj_vertex)
       vtx_color_flag = false // reset if necessary
@@ -351,9 +352,9 @@ async function setupExample(){
 
     if (line[0] == 'f'){
       let triangle = new Array();
-      triangle.push(parseFloat(line_split_trim_filtered[1]))
-      triangle.push(parseFloat(line_split_trim_filtered[2]))
-      triangle.push(parseFloat(line_split_trim_filtered[3]))
+      triangle.push(parseFloat(line_split_trim_filtered[1] - 1))
+      triangle.push(parseFloat(line_split_trim_filtered[2] - 1))
+      triangle.push(parseFloat(line_split_trim_filtered[3] - 1))
       triangles.push(triangle)
       console.log("tri")
     }
@@ -517,8 +518,6 @@ function drawExample(milliseconds){
 
   gl.drawElements(exampleGeom.mode, exampleGeom.count, exampleGeom.type, 0) // then draw things
 
-  // window.m = m4mul(m4rotX(-Math.PI/2))
-  // window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [0,0.5,0], [0,1,0]))
   window.pending = requestAnimationFrame(drawExample)
 }
 
@@ -593,8 +592,7 @@ function timeStep(milliseconds) {
         toggleG = false
 
     window.m = m4mul(m4rotX(-Math.PI/2))
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [0,0.5,0], [0,1,0]))
-    // window.v = m4view([0,origCameraY,2], [0,0,0], [0,1,0])
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [0,0,0], [0,1,0]))
 
     //grab view x,y,z coords and round them appropriately
     view_x = Math.round(window.v[12] * 50) / 50.0
@@ -634,7 +632,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(1.0, 100.0, 0.69, canvas.width, canvas.height)
+        window.p = m4perspNegZ(0.01, 10.0, 0.69, canvas.width, canvas.height)
     }
 }
 

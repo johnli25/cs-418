@@ -42,9 +42,8 @@ void main() {
     vec4 gray_fog = vec4(0.0, 0.0, 0.0, 0.0);
     float alpha = 1.0;
     if (fog_mode == true){
-        // vec4 gray_fog = vec4(0.502, 0.502, 0.502, 0.502);
-        // newTextureColor += mix(textureColor.rgb, gray_fog.rgb, gl_FragCoord.z);
-        alpha = 1.70*(1.0 - gl_FragCoord.z); // "flip" it so it's foggier when you're farther away and less foggy when close
+        alpha = (1.0 - pow(gl_FragCoord.z, 225.0)); // "flip" it so it's foggier when you're farther away and less foggy when close
+        // also since my near plane = 0.01, the z/w will be very huge making the fog extremely bright. So raising the z-coord by exp^(225.0) will offset the brightness 
     }
     fragColor = vec4((textureColor.rgb * lambert), alpha); // original (unused atm)
 }
