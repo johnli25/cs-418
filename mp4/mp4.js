@@ -1,7 +1,7 @@
 /** @global IlliniOrange constant color */
 const IlliniBlue = new Float32Array([0.00, 0.16, 0.84, 1])
 const IlliniOrange = new Float32Array([232.0/256.0, 74.0/256.0, 39.0/256.0, 1])
-const fogGray = new Float32Array([0.502, 0.502, 0.502, 0.6])
+const backgroundFog = new Float32Array([0.702, 0.702, 0.702, 0.75])
 
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
@@ -312,7 +312,10 @@ async function setupExample(){
   if (!inputString)
     inputString = 'example.obj'
 
-  exampleInput = await fetch(inputString).then(res => res.text())
+  exampleInput = await fetch(inputString).then(res => {if (res.status === 404) {
+    console.log("404")
+  } else {return res.text()}})
+  
   if (!exampleInput) // if exampleInput == empty string
     return
   let attributes = {}
@@ -356,14 +359,12 @@ async function setupExample(){
       triangle.push(parseFloat(line_split_trim_filtered[2] - 1))
       triangle.push(parseFloat(line_split_trim_filtered[3] - 1))
       triangles.push(triangle)
-      console.log("tri")
     }
       
     if (line[0] == 'vn')
       continue
     if (line[0] == 'vt')
       continue
-
   }
   example.attributes = attributes
   example.attributes.position = positions
@@ -512,7 +513,7 @@ function drawExample(milliseconds){
   gl.bindVertexArray(exampleGeom.vao)  // and the buffers
   gl.uniform4fv(gl.getUniformLocation(programExample, 'color'), IlliniOrange)
   gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
-  console.log(vtx_color_flag)
+  // console.log(vtx_color_flag)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.m))
 
@@ -525,7 +526,7 @@ function drawExample(milliseconds){
  * Draw one frame
  */
 function draw() {
-    gl.clearColor(...IlliniBlue) // f(...[1,2,3]) means f(1,2,3)
+    gl.clearColor(...backgroundFog) // f(...[1,2,3]) means f(1,2,3)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.useProgram(program)
 
@@ -536,7 +537,7 @@ function draw() {
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
 
     gl.uniform4fv(gl.getUniformLocation(program, 'color'), IlliniOrange)
-    gl.uniform4fv(gl.getUniformLocation(program, 'fog_color'), fogGray)
+    gl.uniform4fv(gl.getUniformLocation(program, 'fog_color'), backgroundFog)
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v, m))
@@ -572,17 +573,17 @@ function timeStep(milliseconds) {
     
     // the signs for rotations are "flipped" for some reason 
     if (keysBeingPressed['arrowup'])
-        x_angle -= 0.04
+        x_angle -= 0.015
     if (keysBeingPressed['arrowdown'])
-        x_angle += 0.04
+        x_angle += 0.015
     if (keysBeingPressed['arrowleft'])
-        y_angle += 0.04
+        y_angle -= 0.015
     if (keysBeingPressed['arrowright'])
-        y_angle -= 0.04
+        y_angle += 0.015
     y_angle = Math.max(Math.min(y_angle, 1.0), -1.0)
-    x_angle = Math.max(Math.min(x_angle, 0.5), -0.5)
+    x_angle = Math.max(Math.min(x_angle, 1.0), -1.0)
     
-    // vehicular camera mvmt (toggle between ground and flight)
+    // vehicular camera mvmt: (toggle 'g' key between ground and flight)
     if ((keysBeingPressed['g'] || keysBeingPressed['G']) && (toggleG == false)) {
         toggleG_cnt += 1 
         ground_mode = toggleG_cnt % 2
@@ -592,32 +593,39 @@ function timeStep(milliseconds) {
         toggleG = false
 
     window.m = m4mul(m4rotX(-Math.PI/2))
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [0,0,0], [0,1,0]))
+    console.log("move forward toward", x_angle)
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [y_angle,-x_angle,0], [0,1,0]))
+    // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
-    //grab view x,y,z coords and round them appropriately
-    view_x = Math.round(window.v[12] * 50) / 50.0
-    view_z_y = Math.round((window.v[14] + 1)*50)/ 50.0 // can be interpreted as z or y in camera view coords. Also +1 offset
-    for (let j = 0; j < terrain.attributes.position.length; j += 1){
-      coor_x = terrain.attributes.position[j][0]
-      coor_y = terrain.attributes.position[j][1]
-      if (coor_x == view_x && coor_y == view_z_y){
-        coor_z = terrain.attributes.position[j][2]
-        // console.log(coor_z)
-        break
-      }
-    }
-
+    // view_x = Math.round(window.v[12])
+    // view_z_y = Math.round((window.v[14] + 1)) // can be interpreted as z or y in camera view coords. Also +1 offset
+    view_x_floor = Math.floor(window.v[12] * 50) / 50.0
+    view_zy_floor = Math.floor((window.v[14] + 1) * 50)/ 50.0// can be interpreted as z or y in camera view coords. Also +1 offset
+    view_x_ceil = Math.floor(window.v[12] * 50) / 50.0
+    view_zy_ceil = Math.floor((window.v[14] + 1) * 50) / 50.0
     // if ground_mode enabled, udpate view matrix with correct height (terrain height + offset)
     if (ground_mode == true) {
+      // vehicular camera mvmt: grab view x,y,z coords and round them appropriately
+      for (let j = 0; j < terrain.attributes.position.length; j += 1){
+        coor_x = terrain.attributes.position[j][0]
+        coor_y = terrain.attributes.position[j][1]
+        if (coor_x == view_x_floor && coor_y == view_zy_floor){
+
+          coor_z = terrain.attributes.position[j][2]
+          // console.log(coor_z)
+          break
+        }
+      }
       window.v = m4mul(m4trans(0, coor_z + (1- (-1))/gridXSize, 0), window.v)
     }
     draw()
     requestAnimationFrame(timeStep)
-    // if (keysBeingPressed['w'] || keysBeingPressed['s'] ||  keysBeingPressed['a'] || keysBeingPressed['d']){
-    //   console.log("view", window.v) 
-    //   console.log("view_x:", view_x)
-    //   console.log("view z y ", view_z_y)
-    // }
+
+    if (keysBeingPressed['w'] || keysBeingPressed['s'] ||  keysBeingPressed['a'] || keysBeingPressed['d']){
+      console.log("view", window.v) 
+      console.log("view_x:", view_x_floor)
+      console.log("view z y ", view_zy_floor)
+    }
 }
 
 /** Resizes the canvas to completely fill the screen */
