@@ -175,11 +175,13 @@ for line in txt_input_clean:
 
             for vtx in [i1, i2, i3]:
                 # what to do with after checking clip_plane???
-                if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
+                if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == True:
                     print("begin clip1")
+                    continue
                 # what to do with after checking clip_plane???
-                if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == False:
+                if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == True:
                     print("begin clip2")
+                    continue
 
         for v in [i1, i2, i3]: # viewport transformation
             x = copy.deepcopy(v[0])

@@ -336,7 +336,7 @@ async function setupExample(){
       let obj_vertex = new Array();
       obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
       obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
-      obj_vertex.push(parseFloat(line_split_trim_filtered[3] + 0.35))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[3]))
       positions.push(obj_vertex)
       vtx_color_flag = false // reset if necessary
       if (line_split_trim_filtered.length == 7){
@@ -515,7 +515,8 @@ function drawExample(milliseconds){
   gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
   // console.log(vtx_color_flag)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
-  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.m))
+  window.mExample = m4mul(m4trans(0, 0.2, 0), IdentityMatrix)
+  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.mExample))
 
   gl.drawElements(exampleGeom.mode, exampleGeom.count, exampleGeom.type, 0) // then draw things
 
@@ -575,13 +576,13 @@ Math.blerp = function (z_x1_y1, z_x2_y1, z_x1_y2, z_x2_y2, x1, y1, x2, y2, x, y)
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
-        eyeCameraZ += 0.005
+        eyeCameraZ += 0.01
     if (keysBeingPressed['A'] || keysBeingPressed['a'])
-        eyeCameraX += 0.005
+        eyeCameraX += 0.01
     if (keysBeingPressed['S'] || keysBeingPressed['s'])
-        eyeCameraZ -= 0.005
+        eyeCameraZ -= 0.01
     if (keysBeingPressed['D'] || keysBeingPressed['d'])
-        eyeCameraX -= 0.005
+        eyeCameraX -= 0.01
     
     // the signs for rotations are "flipped" for some reason 
     if (keysBeingPressed['arrowup'])
@@ -607,7 +608,7 @@ function timeStep(milliseconds) {
     window.m = m4mul(m4rotX(-Math.PI/2))
     console.log("move forward toward", x_angle)
     // window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ + x_angle), m4view([0,1,2.9], [10*y_angle,-x_angle,0], [0,1,0]))
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0, -x_angle + 0.20, 1.0], [0, -x_angle + 0.20,0], [0,1,0]))
+    window.v = m4mul(m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0, 0.20, 1.0], [y_angle, 0.20, x_angle], [0,1,0]))
     // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
     view_x = window.v[12]
@@ -661,7 +662,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(0.01, 10.0, 0.69, canvas.width, canvas.height)
+        window.p = m4perspNegZ(0.01, 100.0, 0.69, canvas.width, canvas.height)
     }
 }
 
