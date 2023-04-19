@@ -274,7 +274,7 @@ function verticalSeperation(data){
     z_min = Math.min(z_min, data.attributes.position[i][2])
     z_max = Math.max(z_max, data.attributes.position[i][2])
   }
-  h = (x_max - x_min)*(0.26)
+  h = (x_max - x_min)*(0.25)
   if (h != 0){
     for (let j = 0; j < data.attributes.position.length; j += 1){
       z = data.attributes.position[j][2]
@@ -559,17 +559,29 @@ function draw() {
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
 
+Math.blerp = function (z_x1_y1, z_x2_y1, z_x1_y2, z_x2_y2, x1, y1, x2, y2, x, y) {
+    // let q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * values[x1][y1]
+    // let q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * values[x2][y1]
+    // let q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x1][y2]
+    // let q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x2][y2]
+    let q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x1_y1
+    let q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x2_y1
+    let q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x1_y2
+    let q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x2_y2
+    return q11 + q21 + q12 + q22
+}
+
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
     if (keysBeingPressed['W'] || keysBeingPressed['w'])
-        eyeCameraZ += 0.015
+        eyeCameraZ += 0.005
     if (keysBeingPressed['A'] || keysBeingPressed['a'])
-        eyeCameraX += 0.015
+        eyeCameraX += 0.005
     if (keysBeingPressed['S'] || keysBeingPressed['s'])
-        eyeCameraZ -= 0.015
+        eyeCameraZ -= 0.005
     if (keysBeingPressed['D'] || keysBeingPressed['d'])
-        eyeCameraX -= 0.015
+        eyeCameraX -= 0.005
     
     // the signs for rotations are "flipped" for some reason 
     if (keysBeingPressed['arrowup'])
@@ -580,8 +592,8 @@ function timeStep(milliseconds) {
         y_angle -= 0.015
     if (keysBeingPressed['arrowright'])
         y_angle += 0.015
-    y_angle = Math.max(Math.min(y_angle, 1.0), -1.0)
-    x_angle = Math.max(Math.min(x_angle, 1.0), -1.0)
+    y_angle = Math.max(Math.min(y_angle, 100.0), -100.0)
+    x_angle = Math.max(Math.min(x_angle, 100.0), -100.0)
     
     // vehicular camera mvmt: (toggle 'g' key between ground and flight)
     if ((keysBeingPressed['g'] || keysBeingPressed['G']) && (toggleG == false)) {
@@ -594,29 +606,36 @@ function timeStep(milliseconds) {
 
     window.m = m4mul(m4rotX(-Math.PI/2))
     console.log("move forward toward", x_angle)
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,1,2.9], [y_angle,-x_angle,0], [0,1,0]))
+    // window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ + x_angle), m4view([0,1,2.9], [10*y_angle,-x_angle,0], [0,1,0]))
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0, -x_angle + 0.20, 1.0], [0, -x_angle + 0.20,0], [0,1,0]))
     // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
-    // view_x = Math.round(window.v[12])
-    // view_z_y = Math.round((window.v[14] + 1)) // can be interpreted as z or y in camera view coords. Also +1 offset
-    view_x_floor = Math.floor(window.v[12] * 50) / 50.0
-    view_zy_floor = Math.floor((window.v[14] + 1) * 50)/ 50.0// can be interpreted as z or y in camera view coords. Also +1 offset
-    view_x_ceil = Math.floor(window.v[12] * 50) / 50.0
-    view_zy_ceil = Math.floor((window.v[14] + 1) * 50) / 50.0
+    view_x = window.v[12]
+    view_zy = window.v[14]
+    view_x_floor = Math.floor(window.v[12] * 50.0) / 50.0
+    view_zy_floor = Math.floor((window.v[14]) * 50.0)/ 50.0// can be interpreted as z or y in camera view coords. Also +1 offset
+    view_x_ceil = Math.floor(window.v[12] * 50.0) / 50.0 + 0.02
+    view_zy_ceil = Math.floor((window.v[14]) * 50.0) / 50.0 + 0.02
     // if ground_mode enabled, udpate view matrix with correct height (terrain height + offset)
-    if (ground_mode == true) {
+    if (ground_mode == true && (Math.abs(view_x) <= 1 && Math.abs(view_zy) <= 1)) {
       // vehicular camera mvmt: grab view x,y,z coords and round them appropriately
-      for (let j = 0; j < terrain.attributes.position.length; j += 1){
+      console.log("current x and y", view_x, "   ", view_zy)
+      for (let j = 0; j < terrain.attributes.position.length - gridXSize - 1; j += 1){
         coor_x = terrain.attributes.position[j][0]
         coor_y = terrain.attributes.position[j][1]
         if (coor_x == view_x_floor && coor_y == view_zy_floor){
-
-          coor_z = terrain.attributes.position[j][2]
-          // console.log(coor_z)
+          z_x1_y1 = terrain.attributes.position[j][2]
+          z_x2_y1 = terrain.attributes.position[j+1][2]
+          z_x1_y2 = terrain.attributes.position[j+ gridXSize][2]
+          z_x2_y2 = terrain.attributes.position[j+gridXSize+1][2]
+          the_blerp = Math.blerp(z_x1_y1, z_x2_y1, z_x1_y2, z_x2_y2, coor_x, coor_y, view_x_ceil, view_zy_ceil, view_x, view_zy)
+          // coor_z = terrain.attributes.position[j][2]
+          coor_z = the_blerp
           break
         }
       }
-      window.v = m4mul(m4trans(0, coor_z + (1- (-1))/gridXSize, 0), window.v)
+      // window.v = m4mul(m4trans(0, coor_z + (1- (-1))/gridXSize, 0), window.v)
+      window.v[13] = coor_z - (2)/gridXSize - 0.15
     }
     draw()
     requestAnimationFrame(timeStep)
@@ -625,6 +644,8 @@ function timeStep(milliseconds) {
       console.log("view", window.v) 
       console.log("view_x:", view_x_floor)
       console.log("view z y ", view_zy_floor)
+      console.log("x floor: ", view_x_floor, "x ceil: ", view_x_ceil)
+      console.log(coor_z)
     }
 }
 
