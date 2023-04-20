@@ -331,6 +331,7 @@ async function setupExample(){
     }
       
     else if (line[0] == 'vn'){
+      continue
       let normal = new Array();
       normal.push(parseFloat(line_split_trim_filtered[1]))
       normal.push(parseFloat(line_split_trim_filtered[2]))
@@ -338,6 +339,7 @@ async function setupExample(){
       normals.push(normal)
     }
     else if (line[0] == 'vt'){
+      continue
       let texture = new Array();
       texture.push(parseFloat(line_split_trim_filtered[1]))
       texture.push(parseFloat(line_split_trim_filtered[2]))
@@ -366,15 +368,17 @@ async function setupExample(){
       triangle.push(parseFloat(vertex2[0] - 1))
       triangle.push(parseFloat(vertex3[0] - 1))
       triangles.push(triangle)
-      if (line_split_trim >= 5){
+      if (line_split_trim_filtered.length >= 5){
         for (let i = 4; i < line_split_trim.length; i++){
           let new_tri = new Array();
-          new_tri.push(parseFloat(line_split_trim_filtered[1] - 1))
-          new_tri.push(parseFloat(line_split_trim_filtered[i-1] - 1))
-          new_tri.push(parseFloat(line_split_trim_filtered[i] - 1))
           
+          new_vertex_prev = line_split_trim_filtered[i-1].split('/')
           new_vertex = line_split_trim_filtered[i].split('/')
-          if (new_vertex.length >= 2){
+          new_tri.push(parseFloat(vertex1[0] - 1))
+          new_tri.push(parseFloat(new_vertex_prev[0] - 1))
+          new_tri.push(parseFloat(new_vertex[0] - 1))
+          console.log("new tri: ", new_tri)
+          if (new_vertex.length >= 20){
             textures[parseInt(new_vertex[0])] = parseFloat(new_vertex[1])
             normals[parseInt(new_vertex[0])] = parseFloat(new_vertex[2])
           }
