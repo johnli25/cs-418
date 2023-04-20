@@ -7,7 +7,7 @@ uniform vec4 color;
 uniform bool fog_mode;
 
 in vec3 outnormal;
-in vec3 vPosition;
+// in vec3 vPosition;
 in vec2 vTexCoord;
 
 uniform vec3 lightdir;

@@ -283,34 +283,10 @@ function verticalSeperation(data){
   }
 }
 
-function spheroidal_weathering(weathering, width, height){
-  cnt = 0
-  for (let j = 0; j < weathering; j += 1){
-    for (let i = 0; i < terrain.attributes.position.length; i += 1){
-      avg = 0.0;
-      curr_x = i % (width + 1)
-      curr_y = Math.floor(i / (height + 1))
-
-      //calculate avg:
-      for (let x = -3; x < 3; x += 1){
-        for (let y = -3; y < 3; y += 1){
-          x_cor = Math.max(0, Math.min(curr_x + x, width))
-          y_cor = Math.max(0, Math.min(curr_y + y, height))
-          avg += terrain.attributes.position[(x_cor)*width + y_cor][2] // z
-        }
-      }
-      avg /= terrain.attributes.position.length
-      cnt += 1
-      original_z = terrain.attributes.position[i][2]
-      terrain.attributes.position[i][2] = (original_z + avg) * 0.875
-    }
-  }
-}
-
 async function setupExample(){
   inputString = window.location.hash.substr(1)
   if (!inputString)
-    inputString = 'example.obj'
+    inputString = 'example.obj' //make sure to change to example.obj at the end!
 
   exampleInput = await fetch(inputString).then(res => {if (res.status === 404) {
     console.log("404")
@@ -322,6 +298,8 @@ async function setupExample(){
   let positions = []
   let triangles = []
   let vertex_colors = []
+  let normals = []
+  let textures = []
   let lines = exampleInput.split("\n");
   for (let i = 0; i < lines.length; i++){
     let line = lines[i]
@@ -329,10 +307,10 @@ async function setupExample(){
 
     // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
     let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
-
-    if (line[0] == '#')
+    // line_split_trim_filtered = line_split_trim_filtered.split('/')
+    if (line[0] == '#' || line[0] == 'o')
       continue
-    if (line[0] == 'v'){
+    else if (line[0] == 'v'){
       let obj_vertex = new Array();
       obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
       obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
@@ -341,7 +319,6 @@ async function setupExample(){
       vtx_color_flag = false // reset if necessary
       if (line_split_trim_filtered.length == 7){
         vtx_color_flag = true;
-        // console.log("yo", line_split_trim_filtered)
         let obj_vertex_color = new Array()
         obj_vertex_color.push(parseFloat(line_split_trim_filtered[4]))
         obj_vertex_color.push(parseFloat(line_split_trim_filtered[5]))
@@ -352,24 +329,73 @@ async function setupExample(){
         vertex_colors.push(obj_vertex_color)
       }
     }
-
-    if (line[0] == 'f'){
-      let triangle = new Array();
-      triangle.push(parseFloat(line_split_trim_filtered[1] - 1))
-      triangle.push(parseFloat(line_split_trim_filtered[2] - 1))
-      triangle.push(parseFloat(line_split_trim_filtered[3] - 1))
-      triangles.push(triangle)
-    }
       
-    if (line[0] == 'vn')
-      continue
-    if (line[0] == 'vt')
-      continue
+    else if (line[0] == 'vn'){
+      let normal = new Array();
+      normal.push(parseFloat(line_split_trim_filtered[1]))
+      normal.push(parseFloat(line_split_trim_filtered[2]))
+      normal.push(parseFloat(line_split_trim_filtered[3]))
+      normals.push(normal)
+    }
+    else if (line[0] == 'vt'){
+      let texture = new Array();
+      texture.push(parseFloat(line_split_trim_filtered[1]))
+      texture.push(parseFloat(line_split_trim_filtered[2]))
+      // normal.push(parseFloat(line_split_trim_filtered[3]))
+      textures.push(texture)
+    }
+    else if (line[0] == 'f'){
+      console.log(line_split_trim_filtered)
+      vertex1 = line_split_trim_filtered[1].split('/')
+      vertex2 = line_split_trim_filtered[2].split('/')
+      vertex3 = line_split_trim_filtered[3].split('/')
+
+      if (vertex1.length >= 10){ //just need to check vertex1 for now (since vertex2 and vertex3 are same format)
+        let normals_copy = normals
+        let textures_copy = textures
+        textures[parseInt(vertex1[0])] = textures_copy[parseInt(vertex1[1])]
+        normals[parseInt(vertex1[0])] = normals_copy[parseInt(vertex1[2])]
+        textures[parseInt(vertex2[0])] = textures_copy[parseInt(vertex2[1])]
+        normals[parseInt(vertex2[0])] = normals_copy[parseInt(vertex2[2])]
+        textures[parseInt(vertex3[0])] = textures_copy[parseInt(vertex3[1])]
+        normals[parseInt(vertex3[0])] = normals_copy[parseInt(vertex3[2])]
+      }
+
+      let triangle = new Array();
+      triangle.push(parseFloat(vertex1[0] - 1))
+      triangle.push(parseFloat(vertex2[0] - 1))
+      triangle.push(parseFloat(vertex3[0] - 1))
+      triangles.push(triangle)
+      if (line_split_trim >= 5){
+        for (let i = 4; i < line_split_trim.length; i++){
+          let new_tri = new Array();
+          new_tri.push(parseFloat(line_split_trim_filtered[1] - 1))
+          new_tri.push(parseFloat(line_split_trim_filtered[i-1] - 1))
+          new_tri.push(parseFloat(line_split_trim_filtered[i] - 1))
+          
+          new_vertex = line_split_trim_filtered[i].split('/')
+          if (new_vertex.length >= 2){
+            textures[parseInt(new_vertex[0])] = parseFloat(new_vertex[1])
+            normals[parseInt(new_vertex[0])] = parseFloat(new_vertex[2])
+          }
+
+          triangles.push(new_tri)
+        }
+      }
+    }
   }
   example.attributes = attributes
   example.attributes.position = positions
-  example.triangles = triangles
   example.attributes.vertex_color = vertex_colors
+
+  example.triangles = triangles
+
+  if (normals.length != 0)
+    example.attributes.normals = normals 
+
+  if (textures.length != 0)
+    example.attributes.textures = textures
+
   console.log("example", example)
 
   window.gl = document.querySelector('canvas').getContext('webgl2',
@@ -436,7 +462,7 @@ function supplyDataBuffer(data, program, vsIn, mode) {
     gl.bufferData(gl.ARRAY_BUFFER, f32, mode)
     
     let loc = gl.getAttribLocation(program, vsIn)
-    console.log(data)
+    console.log("data", data)
     gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(loc)
     
@@ -561,10 +587,6 @@ function draw() {
 }
 
 Math.blerp = function (z_x1_y1, z_x2_y1, z_x1_y2, z_x2_y2, x1, y1, x2, y2, x, y) {
-    // let q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * values[x1][y1]
-    // let q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * values[x2][y1]
-    // let q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x1][y2]
-    // let q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * values[x2][y2]
     let q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x1_y1
     let q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x2_y1
     let q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x1_y2
@@ -606,9 +628,8 @@ function timeStep(milliseconds) {
         toggleG = false
 
     window.m = m4mul(m4rotX(-Math.PI/2))
-    console.log("move forward toward", x_angle)
-    // window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ + x_angle), m4view([0,1,2.9], [10*y_angle,-x_angle,0], [0,1,0]))
-    window.v = m4mul(m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0, 0.20, 1.0], [y_angle, 0.20, x_angle], [0,1,0]))
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.5,2.9], [0,0.5,0], [0,1,0]))
+    // window.v = m4mul(m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0, 0.20, 1.0], [0, 0.20, 0], [0,1,0]))
     // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
     view_x = window.v[12]
@@ -635,7 +656,7 @@ function timeStep(milliseconds) {
           break
         }
       }
-      // window.v = m4mul(m4trans(0, coor_z + (1- (-1))/gridXSize, 0), window.v)
+      // window.v = m4mul(m4trans(0, coor_z - (1- (-1))/gridXSize - 0.15, 0), window.v)
       window.v[13] = coor_z - (2)/gridXSize - 0.15
     }
     draw()
@@ -646,7 +667,7 @@ function timeStep(milliseconds) {
       console.log("view_x:", view_x_floor)
       console.log("view z y ", view_zy_floor)
       console.log("x floor: ", view_x_floor, "x ceil: ", view_x_ceil)
-      console.log(coor_z)
+      // console.log(coor_z)
     }
 }
 
