@@ -299,7 +299,9 @@ async function setupExample(){
   let triangles = []
   let vertex_colors = []
   let normals = []
+  let normals_copy = []
   let textures = []
+  let textures_copy = []
   let lines = exampleInput.split("\n");
   for (let i = 0; i < lines.length; i++){
     let line = lines[i]
@@ -307,10 +309,11 @@ async function setupExample(){
 
     // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
     let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
+    console.log(line_split_trim_filtered)
     // line_split_trim_filtered = line_split_trim_filtered.split('/')
     if (line[0] == '#' || line[0] == 'o')
       continue
-    else if (line[0] == 'v'){
+    else if (line_split_trim_filtered[0] == 'v'){
       let obj_vertex = new Array();
       obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
       obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
@@ -329,32 +332,35 @@ async function setupExample(){
         vertex_colors.push(obj_vertex_color)
       }
     }
-      
     else if (line[0] == 'vn'){
-      continue
       let normal = new Array();
       normal.push(parseFloat(line_split_trim_filtered[1]))
       normal.push(parseFloat(line_split_trim_filtered[2]))
       normal.push(parseFloat(line_split_trim_filtered[3]))
-      normals.push(normal)
+      normals_copy.push(normal)
     }
     else if (line[0] == 'vt'){
-      continue
+      console.log("yer")
       let texture = new Array();
       texture.push(parseFloat(line_split_trim_filtered[1]))
       texture.push(parseFloat(line_split_trim_filtered[2]))
       // normal.push(parseFloat(line_split_trim_filtered[3]))
-      textures.push(texture)
+      textures_copy.push(texture)
     }
     else if (line[0] == 'f'){
-      console.log(line_split_trim_filtered)
+      // console.log(line_split_trim_filtered)
       vertex1 = line_split_trim_filtered[1].split('/')
       vertex2 = line_split_trim_filtered[2].split('/')
       vertex3 = line_split_trim_filtered[3].split('/')
 
-      if (vertex1.length >= 10){ //just need to check vertex1 for now (since vertex2 and vertex3 are same format)
-        let normals_copy = normals
-        let textures_copy = textures
+      let triangle = new Array();
+      triangle.push(parseFloat(vertex1[0] - 1))
+      triangle.push(parseFloat(vertex2[0] - 1))
+      triangle.push(parseFloat(vertex3[0] - 1))
+      triangles.push(triangle)
+    
+      if (vertex1.length >= 2){ //just need to check vertex1 for now (since vertex2 and vertex3 are same format)
+        console.log("texture copy: ", textures_copy)
         textures[parseInt(vertex1[0])] = textures_copy[parseInt(vertex1[1])]
         normals[parseInt(vertex1[0])] = normals_copy[parseInt(vertex1[2])]
         textures[parseInt(vertex2[0])] = textures_copy[parseInt(vertex2[1])]
@@ -363,11 +369,6 @@ async function setupExample(){
         normals[parseInt(vertex3[0])] = normals_copy[parseInt(vertex3[2])]
       }
 
-      let triangle = new Array();
-      triangle.push(parseFloat(vertex1[0] - 1))
-      triangle.push(parseFloat(vertex2[0] - 1))
-      triangle.push(parseFloat(vertex3[0] - 1))
-      triangles.push(triangle)
       if (line_split_trim_filtered.length >= 5){
         for (let i = 4; i < line_split_trim.length; i++){
           let new_tri = new Array();
@@ -377,7 +378,6 @@ async function setupExample(){
           new_tri.push(parseFloat(vertex1[0] - 1))
           new_tri.push(parseFloat(new_vertex_prev[0] - 1))
           new_tri.push(parseFloat(new_vertex[0] - 1))
-          console.log("new tri: ", new_tri)
           if (new_vertex.length >= 20){
             textures[parseInt(new_vertex[0])] = parseFloat(new_vertex[1])
             normals[parseInt(new_vertex[0])] = parseFloat(new_vertex[2])
@@ -401,6 +401,8 @@ async function setupExample(){
     example.attributes.textures = textures
 
   console.log("example", example)
+  console.log("normals: ", normals)
+  console.log("textures: ", textures)
 
   window.gl = document.querySelector('canvas').getContext('webgl2',
     // optional configuration object: see https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
