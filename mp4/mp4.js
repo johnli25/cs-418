@@ -260,7 +260,6 @@ function addNormals(data) {
     normals[i] = normalize(normals[i])
   }
   data.attributes.normal = normals;
-  console.log(data)
 }
 
 function verticalSeperation(data){
@@ -294,13 +293,19 @@ async function setupExample(){
   
   if (!exampleInput) // if exampleInput == empty string
     return
+
+  let texture_normal_flag = false
+  let vn_flag = false
+  let vt_flag = false
+  let vn_vt_flag = false
+
   let attributes = {}
   let positions = []
   let triangles = []
   let vertex_colors = []
-  let normals = []
+  var normals = []
   let normals_copy = []
-  let textures = []
+  var textures = []
   let textures_copy = []
   let lines = exampleInput.split("\n");
   for (let i = 0; i < lines.length; i++){
@@ -309,7 +314,7 @@ async function setupExample(){
 
     // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
     let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
-    console.log(line_split_trim_filtered)
+    // console.log(line_split_trim_filtered)
     // line_split_trim_filtered = line_split_trim_filtered.split('/')
     if (line[0] == '#' || line[0] == 'o')
       continue
@@ -332,22 +337,21 @@ async function setupExample(){
         vertex_colors.push(obj_vertex_color)
       }
     }
-    else if (line[0] == 'vn'){
+    else if (line_split_trim_filtered[0] == 'vn'){
       let normal = new Array();
       normal.push(parseFloat(line_split_trim_filtered[1]))
       normal.push(parseFloat(line_split_trim_filtered[2]))
       normal.push(parseFloat(line_split_trim_filtered[3]))
       normals_copy.push(normal)
     }
-    else if (line[0] == 'vt'){
-      console.log("yer")
+    else if (line_split_trim_filtered[0] == 'vt'){
       let texture = new Array();
       texture.push(parseFloat(line_split_trim_filtered[1]))
       texture.push(parseFloat(line_split_trim_filtered[2]))
       // normal.push(parseFloat(line_split_trim_filtered[3]))
       textures_copy.push(texture)
     }
-    else if (line[0] == 'f'){
+    else if (line_split_trim_filtered[0] == 'f'){
       // console.log(line_split_trim_filtered)
       vertex1 = line_split_trim_filtered[1].split('/')
       vertex2 = line_split_trim_filtered[2].split('/')
@@ -361,12 +365,18 @@ async function setupExample(){
     
       if (vertex1.length >= 2){ //just need to check vertex1 for now (since vertex2 and vertex3 are same format)
         console.log("texture copy: ", textures_copy)
-        textures[parseInt(vertex1[0])] = textures_copy[parseInt(vertex1[1])]
-        normals[parseInt(vertex1[0])] = normals_copy[parseInt(vertex1[2])]
-        textures[parseInt(vertex2[0])] = textures_copy[parseInt(vertex2[1])]
-        normals[parseInt(vertex2[0])] = normals_copy[parseInt(vertex2[2])]
-        textures[parseInt(vertex3[0])] = textures_copy[parseInt(vertex3[1])]
-        normals[parseInt(vertex3[0])] = normals_copy[parseInt(vertex3[2])]
+        console.log("position: ", positions)
+        if (texture_normal_flag == false){
+          normals = new Array(normals_copy.length)
+          textures = new Array(textures_copy.length)
+          texture_normal_flag = true
+        }
+        textures[parseInt(vertex1[0]) - 1] = textures_copy[parseInt(vertex1[1]) - 1]
+        normals[parseInt(vertex1[0]) - 1] = normals_copy[parseInt(vertex1[2]) - 1]
+        textures[parseInt(vertex2[0]) - 1] = textures_copy[parseInt(vertex2[1]) - 1]
+        normals[parseInt(vertex2[0]) - 1] = normals_copy[parseInt(vertex2[2]) - 1]
+        textures[parseInt(vertex3[0]) - 1] = textures_copy[parseInt(vertex3[1]) - 1]
+        normals[parseInt(vertex3[0]) - 1] = normals_copy[parseInt(vertex3[2]) - 1]
       }
 
       if (line_split_trim_filtered.length >= 5){
@@ -393,12 +403,18 @@ async function setupExample(){
   example.attributes.vertex_color = vertex_colors
 
   example.triangles = triangles
+  if (normals.length != 0){
+    vn_flag = true
+    example.attributes.normal = normals 
+  }
 
-  if (normals.length != 0)
-    example.attributes.normals = normals 
+  if (textures.length != 0){
+    vt_flag = true
+    example.attributes.aTexCoord = textures
+  }
 
-  if (textures.length != 0)
-    example.attributes.textures = textures
+  if (vt_flag && vn_flag)
+    vn_vt_flag = true
 
   console.log("example", example)
   console.log("normals: ", normals)
@@ -408,8 +424,20 @@ async function setupExample(){
     // optional configuration object: see https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
     {antialias: false, depth:true, preserveDrawingBuffer:true}
   )
+
   let vs = await fetch('vertex_obj_shader.glsl').then(res => res.text())
   let fs = await fetch('frag_obj_shader.glsl').then(res => res.text())
+  if (vn_vt_flag){
+    console.log("hit")
+    vs = await fetch('v_vn_vt_vtx_shader.glsl').then(res => res.text())
+    fs = await fetch('v_vn_vt_frag_shader.glsl').then(res => res.text())
+  } else if (vt_flag){
+    vs = await fetch('v_vt_vertex_shader.glsl').then(res => res.text())
+    fs = await fetch('v_vt_frag_shader.glsl').then(res => res.text())
+  } else if (vn_flag){
+    vs = await fetch('v_vn_vertex_shader.glsl').then(res => res.text())
+    fs = await fetch('v_vn_frag_shader.glsl').then(res => res.text())
+  }
   window.programExample = compileAndLinkGLSL(vs,fs)
   gl.enable(gl.DEPTH_TEST)
   window.exampleGeom = setupGeometryExample(example)
@@ -468,7 +496,7 @@ function supplyDataBuffer(data, program, vsIn, mode) {
     gl.bufferData(gl.ARRAY_BUFFER, f32, mode)
     
     let loc = gl.getAttribLocation(program, vsIn)
-    console.log("data", data)
+    // console.log("data", data)
     gl.vertexAttribPointer(loc, data[0].length, gl.FLOAT, false, 0, 0)
     gl.enableVertexAttribArray(loc)
     
@@ -547,7 +575,7 @@ function drawExample(milliseconds){
   gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
   // console.log(vtx_color_flag)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
-  window.mExample = m4mul(m4trans(0, 0.2, 0), IdentityMatrix)
+  window.mExample = m4mul(m4trans(0, 0.3, 0), IdentityMatrix)
   gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.mExample))
 
   gl.drawElements(exampleGeom.mode, exampleGeom.count, exampleGeom.type, 0) // then draw things
