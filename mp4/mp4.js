@@ -16,6 +16,7 @@ example = {}
 
 /** @global obj flags */
 vtx_color_flag = false;
+var vt_flag = false
 
 /**@global slot for texture read port */
 var slot = 0; 
@@ -151,6 +152,15 @@ const qlerp = (t,q0,q1) => {
   let o = Math.acos(d), den = Math.sin(o)
   return add(mul(q0, Math.sin((1-t)*o)/den), mul(q1, Math.sin(t*o)/den))
 }
+
+Math.blerp = function (z_x1_y1, z_x2_y1, z_x1_y2, z_x2_y2, x1, y1, x2, y2, x, y) {
+  let q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x1_y1
+  let q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x2_y1
+  let q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x1_y2
+  let q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x2_y2
+  return q11 + q21 + q12 + q22
+}
+
 const sbez = (t, ...p) => {
   while(p.length > 1) p = p.slice(1).map((e,i) => slerp(t,p[i],e))
   return p[0]
@@ -282,168 +292,6 @@ function verticalSeperation(data){
   }
 }
 
-async function setupExample(){
-  inputString = window.location.hash.substr(1)
-  if (!inputString)
-    inputString = 'example.obj' //make sure to change to example.obj at the end!
-
-  exampleInput = await fetch(inputString).then(res => {if (res.status === 404) {
-    console.log("404")
-  } else {return res.text()}})
-  
-  if (!exampleInput) // if exampleInput == empty string
-    return
-
-  let texture_normal_flag = false
-  let vn_flag = false
-  let vt_flag = false
-  let vn_vt_flag = false
-
-  let attributes = {}
-  let positions = []
-  let triangles = []
-  let vertex_colors = []
-  var normals = []
-  let normals_copy = []
-  var textures = []
-  let textures_copy = []
-  let lines = exampleInput.split("\n");
-  for (let i = 0; i < lines.length; i++){
-    let line = lines[i]
-    let line_split_trim = line.split(' ').map(item=>item.trim())
-
-    // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
-    let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
-    // console.log(line_split_trim_filtered)
-    // line_split_trim_filtered = line_split_trim_filtered.split('/')
-    if (line[0] == '#' || line[0] == 'o')
-      continue
-    else if (line_split_trim_filtered[0] == 'v'){
-      let obj_vertex = new Array();
-      obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
-      obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
-      obj_vertex.push(parseFloat(line_split_trim_filtered[3]))
-      positions.push(obj_vertex)
-      vtx_color_flag = false // reset if necessary
-      if (line_split_trim_filtered.length == 7){
-        vtx_color_flag = true;
-        let obj_vertex_color = new Array()
-        obj_vertex_color.push(parseFloat(line_split_trim_filtered[4]))
-        obj_vertex_color.push(parseFloat(line_split_trim_filtered[5]))
-        obj_vertex_color.push(parseFloat(line_split_trim_filtered[6]))
-        vertex_colors.push(obj_vertex_color)
-      } else {
-        let obj_vertex_color = new Array([IlliniOrange[0], IlliniOrange[1], IlliniOrange[2]]) // IlliniOrange
-        vertex_colors.push(obj_vertex_color)
-      }
-    }
-    else if (line_split_trim_filtered[0] == 'vn'){
-      let normal = new Array();
-      normal.push(parseFloat(line_split_trim_filtered[1]))
-      normal.push(parseFloat(line_split_trim_filtered[2]))
-      normal.push(parseFloat(line_split_trim_filtered[3]))
-      normals_copy.push(normal)
-    }
-    else if (line_split_trim_filtered[0] == 'vt'){
-      let texture = new Array();
-      texture.push(parseFloat(line_split_trim_filtered[1]))
-      texture.push(parseFloat(line_split_trim_filtered[2]))
-      // normal.push(parseFloat(line_split_trim_filtered[3]))
-      textures_copy.push(texture)
-    }
-    else if (line_split_trim_filtered[0] == 'f'){
-      // console.log(line_split_trim_filtered)
-      vertex1 = line_split_trim_filtered[1].split('/')
-      vertex2 = line_split_trim_filtered[2].split('/')
-      vertex3 = line_split_trim_filtered[3].split('/')
-
-      let triangle = new Array();
-      triangle.push(parseFloat(vertex1[0] - 1))
-      triangle.push(parseFloat(vertex2[0] - 1))
-      triangle.push(parseFloat(vertex3[0] - 1))
-      triangles.push(triangle)
-    
-      if (vertex1.length >= 2){ //just need to check vertex1 for now (since vertex2 and vertex3 are same format)
-        console.log("texture copy: ", textures_copy)
-        console.log("position: ", positions)
-        if (texture_normal_flag == false){
-          normals = new Array(normals_copy.length)
-          textures = new Array(textures_copy.length)
-          texture_normal_flag = true
-        }
-        textures[parseInt(vertex1[0]) - 1] = textures_copy[parseInt(vertex1[1]) - 1]
-        normals[parseInt(vertex1[0]) - 1] = normals_copy[parseInt(vertex1[2]) - 1]
-        textures[parseInt(vertex2[0]) - 1] = textures_copy[parseInt(vertex2[1]) - 1]
-        normals[parseInt(vertex2[0]) - 1] = normals_copy[parseInt(vertex2[2]) - 1]
-        textures[parseInt(vertex3[0]) - 1] = textures_copy[parseInt(vertex3[1]) - 1]
-        normals[parseInt(vertex3[0]) - 1] = normals_copy[parseInt(vertex3[2]) - 1]
-      }
-
-      if (line_split_trim_filtered.length >= 5){
-        for (let i = 4; i < line_split_trim.length; i++){
-          let new_tri = new Array();
-          
-          new_vertex_prev = line_split_trim_filtered[i-1].split('/')
-          new_vertex = line_split_trim_filtered[i].split('/')
-          new_tri.push(parseFloat(vertex1[0] - 1))
-          new_tri.push(parseFloat(new_vertex_prev[0] - 1))
-          new_tri.push(parseFloat(new_vertex[0] - 1))
-          if (new_vertex.length >= 20){
-            textures[parseInt(new_vertex[0])] = parseFloat(new_vertex[1])
-            normals[parseInt(new_vertex[0])] = parseFloat(new_vertex[2])
-          }
-
-          triangles.push(new_tri)
-        }
-      }
-    }
-  }
-  example.attributes = attributes
-  example.attributes.position = positions
-  example.attributes.vertex_color = vertex_colors
-
-  example.triangles = triangles
-  if (normals.length != 0){
-    vn_flag = true
-    example.attributes.normal = normals 
-  }
-
-  if (textures.length != 0){
-    vt_flag = true
-    example.attributes.aTexCoord = textures
-  }
-
-  if (vt_flag && vn_flag)
-    vn_vt_flag = true
-
-  console.log("example", example)
-  console.log("normals: ", normals)
-  console.log("textures: ", textures)
-
-  window.gl = document.querySelector('canvas').getContext('webgl2',
-    // optional configuration object: see https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
-    {antialias: false, depth:true, preserveDrawingBuffer:true}
-  )
-
-  let vs = await fetch('vertex_obj_shader.glsl').then(res => res.text())
-  let fs = await fetch('frag_obj_shader.glsl').then(res => res.text())
-  if (vn_vt_flag){
-    console.log("hit")
-    vs = await fetch('v_vn_vt_vtx_shader.glsl').then(res => res.text())
-    fs = await fetch('v_vn_vt_frag_shader.glsl').then(res => res.text())
-  } else if (vt_flag){
-    vs = await fetch('v_vt_vertex_shader.glsl').then(res => res.text())
-    fs = await fetch('v_vt_frag_shader.glsl').then(res => res.text())
-  } else if (vn_flag){
-    vs = await fetch('v_vn_vertex_shader.glsl').then(res => res.text())
-    fs = await fetch('v_vn_frag_shader.glsl').then(res => res.text())
-  }
-  window.programExample = compileAndLinkGLSL(vs,fs)
-  gl.enable(gl.DEPTH_TEST)
-  window.exampleGeom = setupGeometryExample(example)
-  requestAnimationFrame(drawExample)
-}
-
 /**
  * Given the source code of a vertex and fragment shader, compiles them,
  * and returns the linked program.
@@ -566,23 +414,6 @@ function setupGeometryExample(geom) {
   }
 }
 
-function drawExample(milliseconds){
-  let seconds = milliseconds / 1000
-  gl.useProgram(programExample)
-
-  gl.bindVertexArray(exampleGeom.vao)  // and the buffers
-  gl.uniform4fv(gl.getUniformLocation(programExample, 'color'), IlliniOrange)
-  gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
-  // console.log(vtx_color_flag)
-  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
-  window.mExample = m4mul(m4trans(0, 0.3, 0), IdentityMatrix)
-  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.mExample))
-
-  gl.drawElements(exampleGeom.mode, exampleGeom.count, exampleGeom.type, 0) // then draw things
-
-  window.pending = requestAnimationFrame(drawExample)
-}
-
 /**
  * Draw one frame
  */
@@ -620,12 +451,28 @@ function draw() {
     gl.drawElements(geom.mode, geom.count, geom.type, 0)
 }
 
-Math.blerp = function (z_x1_y1, z_x2_y1, z_x1_y2, z_x2_y2, x1, y1, x2, y2, x, y) {
-    let q11 = (((x2 - x) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x1_y1
-    let q21 = (((x - x1) * (y2 - y)) / ((x2 - x1) * (y2 - y1))) * z_x2_y1
-    let q12 = (((x2 - x) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x1_y2
-    let q22 = (((x - x1) * (y - y1)) / ((x2 - x1) * (y2 - y1))) * z_x2_y2
-    return q11 + q21 + q12 + q22
+function drawExample(milliseconds){
+  let seconds = milliseconds / 1000
+  gl.useProgram(programExample)
+
+  gl.bindVertexArray(exampleGeom.vao)  // and the buffers
+
+  let lightdir = normalize([0,0,1])
+  gl.uniform3fv(gl.getUniformLocation(programExample, 'lightdir'), lightdir)
+  gl.uniform4fv(gl.getUniformLocation(programExample, 'color'), IlliniOrange)
+  gl.uniform1f(gl.getUniformLocation(programExample, 'vtx_color_flag'), vtx_color_flag)
+  // console.log(vtx_color_flag)
+  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'p'), false, window.p)
+  window.mExample = m4mul(m4trans(0, 0.69, 0), IdentityMatrix)
+  window.mExample = m4mul(m4rotX(-Math.PI/2))
+
+  gl.uniformMatrix4fv(gl.getUniformLocation(programExample, 'mv'), false, m4mul(window.v, window.mExample))
+  let bindPoint = gl.getUniformLocation(programExample, 'aTexCoord')
+  gl.uniform1i(bindPoint, slot) // where `slot` is same it was in step 2 above
+  gl.uniform1i(gl.getUniformLocation(programExample, 'image'), 1)
+  gl.drawElements(exampleGeom.mode, exampleGeom.count, exampleGeom.type, 0) // then draw things
+
+  window.pending = requestAnimationFrame(drawExample)
 }
 
 /** Compute any time-varying or animated aspects of the scene */
@@ -662,7 +509,7 @@ function timeStep(milliseconds) {
         toggleG = false
 
     window.m = m4mul(m4rotX(-Math.PI/2))
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.5,2.9], [0,0.5,0], [0,1,0]))
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.5,2.9], [10.0*y_angle,0.5,x_angle], [0,1,0]))
     // window.v = m4mul(m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0, 0.20, 1.0], [0, 0.20, 0], [0,1,0]))
     // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
@@ -765,6 +612,203 @@ async function setup(event) {
     window.geom = setupGeometry(terrain)
     window.addEventListener('resize', fillScreen)
     requestAnimationFrame(timeStep)
+}
+
+async function setupExample(){
+  inputString = window.location.hash.substr(1)
+  if (!inputString)
+    inputString = 'example.obj' //make sure to change to example.obj at the end!
+
+  exampleInput = await fetch(inputString).then(res => {if (res.status === 404) {
+    console.log("404")
+  } else {return res.text()}})
+  
+  if (!exampleInput) // if exampleInput == empty string
+    return
+
+  let texture_normal_copy_flag = false // flag for ensuring textures or normals are copied ONCE (and then no need to redeclare arrays later)
+  let vn_flag = false
+  vt_flag = false // convert to global
+  let vn_vt_flag = false
+
+  let attributes = {}
+  let positions = []
+  let triangles = []
+  let vertex_colors = []
+  var normals = []
+  let normals_copy = []
+  var textures = []
+  let textures_copy = []
+  let lines = exampleInput.split("\n");
+  for (let i = 0; i < lines.length; i++){
+    let line = lines[i]
+    let line_split_trim = line.split(' ').map(item=>item.trim())
+
+    // link ref for code below: https://stackoverflow.com/questions/19888689/remove-empty-strings-from-array-while-keeping-record-without-loop
+    let line_split_trim_filtered = line_split_trim.filter(c=>c != '')
+    // console.log(line_split_trim_filtered)
+    // line_split_trim_filtered = line_split_trim_filtered.split('/')
+    if (line[0] == '#' || line[0] == 'o')
+      continue
+    else if (line_split_trim_filtered[0] == 'v'){
+      let obj_vertex = new Array();
+      obj_vertex.push(parseFloat(line_split_trim_filtered[1]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[2]))
+      obj_vertex.push(parseFloat(line_split_trim_filtered[3]))
+      positions.push(obj_vertex)
+      vtx_color_flag = false // reset if necessary
+      if (line_split_trim_filtered.length == 7){
+        console.log("color flag TRUE")
+        vtx_color_flag = true;
+        let obj_vertex_color = new Array()
+        obj_vertex_color.push(parseFloat(line_split_trim_filtered[4]))
+        obj_vertex_color.push(parseFloat(line_split_trim_filtered[5]))
+        obj_vertex_color.push(parseFloat(line_split_trim_filtered[6]))
+        vertex_colors.push(obj_vertex_color)
+      } else {
+        let obj_vertex_color = new Array([IlliniOrange[0], IlliniOrange[1], IlliniOrange[2]]) // IlliniOrange
+        vertex_colors.push(obj_vertex_color)
+      }
+    }
+    else if (line_split_trim_filtered[0] == 'vn'){
+      let normal = new Array();
+      normal.push(parseFloat(line_split_trim_filtered[1]))
+      normal.push(parseFloat(line_split_trim_filtered[2]))
+      normal.push(parseFloat(line_split_trim_filtered[3]))
+      normals_copy.push(normal)
+      vn_flag = true
+    }
+    else if (line_split_trim_filtered[0] == 'vt'){
+      let texture = new Array();
+      texture.push(parseFloat(line_split_trim_filtered[1]))
+      texture.push(parseFloat(line_split_trim_filtered[2]))
+      // normal.push(parseFloat(line_split_trim_filtered[3]))
+      textures_copy.push(texture)
+      vt_flag = true
+    }
+    else if (line_split_trim_filtered[0] == 'f'){
+      // console.log(line_split_trim_filtered)
+      vertex1 = line_split_trim_filtered[1].split('/')
+      vertex2 = line_split_trim_filtered[2].split('/')
+      vertex3 = line_split_trim_filtered[3].split('/')
+
+      let triangle = new Array();
+      triangle.push(parseFloat(vertex1[0] - 1))
+      triangle.push(parseFloat(vertex2[0] - 1))
+      triangle.push(parseFloat(vertex3[0] - 1))
+      triangles.push(triangle)
+    
+      if (vertex1.length >= 2){ //just need to check vertex1 for now (since vertex2 and vertex3 are same format)
+        if (texture_normal_copy_flag == false){
+          if (vn_flag)
+            normals = new Array(normals_copy.length)
+          if (vt_flag)
+            textures = new Array(textures_copy.length)
+          
+          if (vt_flag && vn_flag)
+            vn_vt_flag = true
+          texture_normal_copy_flag = true
+        }
+        textures[parseInt(vertex1[0]) - 1] = textures_copy[parseInt(vertex1[1]) - 1]
+        normals[parseInt(vertex1[0]) - 1] = normals_copy[parseInt(vertex1[2]) - 1]
+        textures[parseInt(vertex2[0]) - 1] = textures_copy[parseInt(vertex2[1]) - 1]
+        normals[parseInt(vertex2[0]) - 1] = normals_copy[parseInt(vertex2[2]) - 1]
+        textures[parseInt(vertex3[0]) - 1] = textures_copy[parseInt(vertex3[1]) - 1]
+        normals[parseInt(vertex3[0]) - 1] = normals_copy[parseInt(vertex3[2]) - 1]
+      }
+
+      if (line_split_trim_filtered.length >= 5){
+        for (let i = 4; i < line_split_trim.length; i++){
+          let new_tri = new Array();
+          
+          new_vertex_prev = line_split_trim_filtered[i-1].split('/')
+          new_vertex = line_split_trim_filtered[i].split('/')
+          new_tri.push(parseFloat(vertex1[0] - 1))
+          new_tri.push(parseFloat(new_vertex_prev[0] - 1))
+          new_tri.push(parseFloat(new_vertex[0] - 1))
+          if (new_vertex.length >= 20){
+            textures[parseInt(new_vertex[0])] = parseFloat(new_vertex[1])
+            normals[parseInt(new_vertex[0])] = parseFloat(new_vertex[2])
+          }
+
+          triangles.push(new_tri)
+        }
+      }
+    }
+  }
+  example.attributes = attributes
+  example.attributes.position = positions
+  example.attributes.vertex_color = vertex_colors
+
+  example.triangles = triangles
+  if (normals.length != 0){
+    vn_flag = true
+    example.attributes.normal = normals 
+  }
+
+  if (textures.length != 0){
+    vt_flag = true
+    example.attributes.aTexCoord = textures
+  }
+
+  console.log("example", example)
+  console.log("normals: ", normals)
+  console.log("textures: ", textures)
+
+  window.gl = document.querySelector('canvas').getContext('webgl2',
+    // optional configuration object: see https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+    {antialias: false, depth:true, preserveDrawingBuffer:true}
+  )
+
+  let vs = await fetch('vertex_obj_shader.glsl').then(res => res.text())
+  let fs = await fetch('frag_obj_shader.glsl').then(res => res.text())
+  if (vn_vt_flag){
+    console.log("hit")
+    vs = await fetch('v_vn_vt_vtx_shader.glsl').then(res => res.text())
+    fs = await fetch('v_vn_vt_frag_shader.glsl').then(res => res.text())
+  } else if (vt_flag){
+    vs = await fetch('v_vt_vertex_shader.glsl').then(res => res.text())
+    fs = await fetch('v_vt_frag_shader.glsl').then(res => res.text())
+  } else if (vn_flag){
+    vs = await fetch('v_vn_vertex_shader.glsl').then(res => res.text())
+    fs = await fetch('v_vn_frag_shader.glsl').then(res => res.text())
+  }
+  window.programExample = compileAndLinkGLSL(vs,fs)
+  gl.enable(gl.DEPTH_TEST)
+  setupTextureObj()
+  window.exampleGeom = setupGeometryExample(example)
+  requestAnimationFrame(drawExample)
+}
+
+function setupTextureObj(){
+  if (!vt_flag)
+    return
+  // else if vt_flag == true
+  let img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = 'thing.jpg'
+  console.log(img)
+  img.addEventListener('load', (event) => {
+  slot = 1; // or a larger integer if this isn't the only texture
+  let texture = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE0 + slot);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  gl.texImage2D(
+    gl.TEXTURE_2D, // destination slot
+    0, // the mipmap level this data provides; almost always 0
+    gl.RGBA, // how to store it in graphics memory
+    gl.RGBA, // how it is stored in the image object
+    gl.UNSIGNED_BYTE, // size of a single pixel-color in HTML
+    img, // source data
+  );
+  gl.generateMipmap(gl.TEXTURE_2D) // lets you use a mipmapping min filter
+  });
 }
 
 window.addEventListener('load', setup)
