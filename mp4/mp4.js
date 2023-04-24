@@ -1,8 +1,7 @@
-/** @global IlliniOrange constant color */
+/** @global Useful constant colors and other matrices (like Identity) */
 const IlliniBlue = new Float32Array([0.00, 0.16, 0.84, 1])
 const IlliniOrange = new Float32Array([232.0/256.0, 74.0/256.0, 39.0/256.0, 1])
 const backgroundFog = new Float32Array([0.702, 0.702, 0.702, 0.75])
-
 const IdentityMatrix = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1])
 
 /** @global global variables for holding size of grid and number of fractures*/
@@ -283,7 +282,7 @@ function verticalSeperation(data){
     z_min = Math.min(z_min, data.attributes.position[i][2])
     z_max = Math.max(z_max, data.attributes.position[i][2])
   }
-  h = (x_max - x_min)*(0.25)
+  h = (x_max - x_min)*(0.15)
   if (h != 0){
     for (let j = 0; j < data.attributes.position.length; j += 1){
       z = data.attributes.position[j][2]
@@ -509,7 +508,7 @@ function timeStep(milliseconds) {
         toggleG = false
 
     window.m = m4mul(m4rotX(-Math.PI/2))
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.5,2.9], [10.0*y_angle,0.5,x_angle], [0,1,0])) //weird that [10*y_angle,...x_angle] works great...keep it at that lol.
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.1,2.9], [10.0*y_angle,0.1 - 2.0*x_angle, 0], [0,1,0])) //weird that [10*y_angle,...x_angle] works great...keep it at that lol.
     // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
     view_x = window.v[12]
