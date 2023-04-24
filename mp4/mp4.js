@@ -784,7 +784,7 @@ function setupTextureObj(){
   // else if vt_flag == true
   let img = new Image();
   img.crossOrigin = 'anonymous';
-  img.src = 'thing.jpg'
+  img.src = 'thing.jpg' //same base name as .obj file
   console.log(img)
   img.addEventListener('load', (event) => {
   slot = 1; // or a larger integer if this isn't the only texture
