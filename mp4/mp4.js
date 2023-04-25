@@ -622,7 +622,7 @@ async function setupExample(){
   } else {return res.text()}})
   
   if (!exampleInput) // if exampleInput == empty string
-    return
+    return //don't even do setupExample()
 
   let texture_normal_copy_flag = false // flag for ensuring textures or normals are copied ONCE (and then no need to redeclare arrays later)
   let vn_flag = false
@@ -761,7 +761,7 @@ async function setupExample(){
   let vs = await fetch('vertex_obj_shader.glsl').then(res => res.text())
   let fs = await fetch('frag_obj_shader.glsl').then(res => res.text())
   if (vn_vt_flag){
-    console.log("hit")
+    // console.log("hit")
     vs = await fetch('v_vn_vt_vtx_shader.glsl').then(res => res.text())
     fs = await fetch('v_vn_vt_frag_shader.glsl').then(res => res.text())
   } else if (vt_flag){
@@ -773,12 +773,13 @@ async function setupExample(){
   }
   window.programExample = compileAndLinkGLSL(vs,fs)
   gl.enable(gl.DEPTH_TEST)
-  setupTextureObj()
+  setupTextureObj(inputString)
   window.exampleGeom = setupGeometryExample(example)
   requestAnimationFrame(drawExample)
 }
 
-function setupTextureObj(){
+function setupTextureObj(inputString){
+  image_name = inputString.split('.')[0]
   if (!vt_flag)
     return
   // else if vt_flag == true
