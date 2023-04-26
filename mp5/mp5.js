@@ -209,14 +209,7 @@ for (let i = 0; i < 50; i += 1){
 }
 
 for (let i = 0; i < 50; i += 1){
-    // if (i == 25){
-    //     colors.push(IlliniOrange)
-    //     continue
-    // }
-    r = (Math.floor(Math.random() * 256)); // Random between 0-255
-    g = (Math.floor(Math.random() * 256)); // Random between 0-255
-    b = (Math.floor(Math.random() * 256)); // Random between 0-255
-    color = new Float32Array([r, g, b, 1])
+    color = new Float32Array([Math.random(), Math.random(), Math.random(), 1])
     colors.push(color)
 }
 console.log(colors)
@@ -229,7 +222,12 @@ function draw(milliseconds){
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, p)
     window.v = m4view([1,1,3], [0,0,0], [0,1,0])
 
-    for (let i = 0; i < 1; i += 1){
+    let lightdir = normalize([0,0,1])
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
+
+    gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
+
+    for (let i = 0; i < 50; i += 1){
         // window.m = m4mul(m4scale(scale[i]), m4trans(trans[i]), IdentityMatrix)
         window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), m4trans(...trans[i]), IdentityMatrix)
 
