@@ -7,3 +7,4 @@ mp1srgb.txt
 mp1rgba.txt
 mp1point.txt
 mp1cull.txt
+mp1clipplane.txt
