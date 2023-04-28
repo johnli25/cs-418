@@ -220,9 +220,10 @@ sphereCurrentVelocity = new Array(50).fill(0) //0-down, 1-up
 
 scale[0] = 0.15
 
-debug_flag = false
+bounce_flag = false
 
 function draw(milliseconds){
+    real_ms = milliseconds % 10000
     gl.clearColor(0.075, 0.16, 0.292, 1)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.useProgram(program)
@@ -237,25 +238,28 @@ function draw(milliseconds){
     for (let i = 0; i < 1; i += 1){
         // trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
         window.m = m4mul(m4scale(scale[i], scale[i], scale[i]))
-        if (debug_flag){
+        if (bounce_flag){
             window.m[13] = trans[i][1]
         }
 
         console.log(window.m[13])
         console.log("b4 velocity position: ", window.m[13])
-        window.m[13] += sphereCurrentVelocity[i]*(milliseconds - prevTime)*0.001 // euler's approx method for velocity
-        sphereCurrentVelocity[i] += -0.000980665 * (milliseconds - prevTime) // euler's approx method for position
+        window.m[13] += sphereCurrentVelocity[i]*(real_ms - prevTime)*0.001 // euler's approx method for velocity
+        sphereCurrentVelocity[i] += -0.000980665 * (real_ms - prevTime) * 0.1// euler's approx method for position
         console.log("speed: ", sphereCurrentVelocity[i])
         console.log("after velocity position: ", window.m[13])
         if (window.m[13] <= -1){ // if y_position hits bounding box, negate velocity and travel other way
             console.log("y position: ", window.m[13])
             console.log("prev velocity: ", sphereCurrentVelocity[i])
             trans[i][1] = window.m[13] // save y-position
+            trans[i][1] = -1
             sphereCurrentVelocity[i] *= -0.99
             console.log("curr velocity: ", sphereCurrentVelocity[i])
-            prevTime = milliseconds
-            if (!debug_flag)
-                debug_flag = true
+            prevTime = real_ms
+            // if (bounce_flag)
+            //     throw new Error(stop)
+            if (!bounce_flag)
+                bounce_flag = true
         }
         // if (window.m[13] >= 2 && window.m[13] <= 2.2){ // if y_position hits bounding box, negate velocity and travel other way
         //     console.log("hit : ", window.m[13])
@@ -265,7 +269,7 @@ function draw(milliseconds){
         //     sphereCurrentVelocity[i] *= -0.7
         // }
         // if (milliseconds <= 4000){ //debug 
-            // console.log("sphere # ", i, ": ", window.m)
+        //     console.log("sphere # ", i, ": ", window.m)
         // } else {
         //     throw new Error("stop")
         // }
@@ -349,11 +353,11 @@ async function setup(event){
     fillScreen()
     window.addEventListener('resize', fillScreen)
     for (let i = 0; i < 50; i += 1){
-        trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
-        window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), trans_mat, IdentityMatrix)
-        sphereCurrentPos[i][0] = window.m[12]
-        sphereCurrentPos[i][1] = window.m[13]
-        sphereCurrentPos[i][2] = window.m[14]
+        // trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
+        // window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), trans_mat, IdentityMatrix)
+        // sphereCurrentPos[i][0] = window.m[12]
+        // sphereCurrentPos[i][1] = window.m[13]
+        // sphereCurrentPos[i][2] = window.m[14]
     }
     requestAnimationFrame(draw)
 }
