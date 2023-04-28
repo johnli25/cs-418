@@ -219,9 +219,6 @@ sphereCurrentPos = new Array(50).fill(0)
 sphereCurrentVelocity = new Array(50).fill(0) //0-down, 1-up
 
 scale[0] = 0.15
-trans[0][0] = 0.0
-trans[0][1] = 0.0
-trans[0][2] = 0.0
 
 debug_flag = false
 
@@ -242,29 +239,21 @@ function draw(milliseconds){
         window.m = m4mul(m4scale(scale[i], scale[i], scale[i]))
         if (debug_flag){
             window.m[13] = trans[i][1]
-            console.log("after 1 bounce")
         }
-        // window.m[12] = trans[i][0]
-        // window.m[13] = trans[i][1]
-        // window.m[14] = trans[i][2]
+
         console.log(window.m[13])
         console.log("b4 velocity position: ", window.m[13])
-        window.m[13] += sphereCurrentVelocity[i]*(milliseconds - prevTime)*0.0001 // euler's approx method for velocity
-        sphereCurrentVelocity[i] += -0.000980665 * (milliseconds - prevTime) * 0.5 // euler's approx method for position
+        window.m[13] += sphereCurrentVelocity[i]*(milliseconds - prevTime)*0.001 // euler's approx method for velocity
+        sphereCurrentVelocity[i] += -0.000980665 * (milliseconds - prevTime) // euler's approx method for position
         console.log("speed: ", sphereCurrentVelocity[i])
         console.log("after velocity position: ", window.m[13])
-        // sphereCurrentPos[i] = ([window.m[12], window.m[13], window.m[14]])
-        if (window.m[13] <= -1 && window.m[13] >= -1.2){ // if y_position hits bounding box, negate velocity and travel other way
-            if (debug_flag)
-                throw new Error("stop")
+        if (window.m[13] <= -1){ // if y_position hits bounding box, negate velocity and travel other way
             console.log("y position: ", window.m[13])
             console.log("prev velocity: ", sphereCurrentVelocity[i])
-            // window.m[13] = -1
             trans[i][1] = window.m[13] // save y-position
-            // sphereCurrentPos[i] = ([window.m[12], window.m[13], window.m[14]])
-            sphereCurrentVelocity[i] *= -1
+            sphereCurrentVelocity[i] *= -0.99
             console.log("curr velocity: ", sphereCurrentVelocity[i])
-            // prevTime = milliseconds
+            prevTime = milliseconds
             if (!debug_flag)
                 debug_flag = true
         }
@@ -280,7 +269,6 @@ function draw(milliseconds){
         // } else {
         //     throw new Error("stop")
         // }
-
         gl.uniform4fv(gl.getUniformLocation(program, 'color'), colors[i])
 
         gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v, m))
