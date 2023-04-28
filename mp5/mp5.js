@@ -215,12 +215,8 @@ for (let i = 0; i < 50; i += 1){
 
 prevTime = 0
 
-sphereCurrentPos = new Array(50)
+sphereCurrentPos = new Array(50).fill(0)
 sphereCurrentVelocity = new Array(50).fill(0) //0-down, 1-up
-
-function reset(){ //function for reseting global variables, buffers, etc.
-
-}
 
 scale[0] = 0.15
 trans[0][0] = 0.0
@@ -241,30 +237,34 @@ function draw(milliseconds){
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
 
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
-    init_flag = false
     for (let i = 0; i < 1; i += 1){
-        trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
-        window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), IdentityMatrix)
-
-        window.m[12] = trans[i][0]
-        window.m[13] = trans[i][1]
-        window.m[14] = trans[i][2]
+        // trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
+        window.m = m4mul(m4scale(scale[i], scale[i], scale[i]))
+        if (debug_flag){
+            window.m[13] = trans[i][1]
+            console.log("after 1 bounce")
+        }
+        // window.m[12] = trans[i][0]
+        // window.m[13] = trans[i][1]
+        // window.m[14] = trans[i][2]
         console.log(window.m[13])
         console.log("b4 velocity position: ", window.m[13])
-        sphereCurrentVelocity[i] += -0.000980665 * milliseconds * 0.5 // euler's approx method for position
-        window.m[13] += sphereCurrentVelocity[i]*milliseconds*0.0001 // euler's approx method for velocity
+        window.m[13] += sphereCurrentVelocity[i]*(milliseconds - prevTime)*0.0001 // euler's approx method for velocity
+        sphereCurrentVelocity[i] += -0.000980665 * (milliseconds - prevTime) * 0.5 // euler's approx method for position
+        console.log("speed: ", sphereCurrentVelocity[i])
         console.log("after velocity position: ", window.m[13])
         // sphereCurrentPos[i] = ([window.m[12], window.m[13], window.m[14]])
         if (window.m[13] <= -1 && window.m[13] >= -1.2){ // if y_position hits bounding box, negate velocity and travel other way
+            if (debug_flag)
+                throw new Error("stop")
             console.log("y position: ", window.m[13])
             console.log("prev velocity: ", sphereCurrentVelocity[i])
             // window.m[13] = -1
-            trans[i][1] = window.m[13]
+            trans[i][1] = window.m[13] // save y-position
             // sphereCurrentPos[i] = ([window.m[12], window.m[13], window.m[14]])
             sphereCurrentVelocity[i] *= -1
             console.log("curr velocity: ", sphereCurrentVelocity[i])
-            if (debug_flag)
-                throw new Error("stop")
+            // prevTime = milliseconds
             if (!debug_flag)
                 debug_flag = true
         }
@@ -288,6 +288,10 @@ function draw(milliseconds){
     }
 
     window.pending = requestAnimationFrame(draw)
+}
+
+function reset(){ //function for reseting global variables, buffers, etc.
+
 }
 
 /** Resizes the canvas to completely fill the screen */
@@ -357,8 +361,11 @@ async function setup(event){
     fillScreen()
     window.addEventListener('resize', fillScreen)
     for (let i = 0; i < 50; i += 1){
-        // trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
-        // window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), IdentityMatrix)
+        trans_mat = m4trans(trans[i][0], trans[i][1], trans[i][2])
+        window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), trans_mat, IdentityMatrix)
+        sphereCurrentPos[i][0] = window.m[12]
+        sphereCurrentPos[i][1] = window.m[13]
+        sphereCurrentPos[i][2] = window.m[14]
     }
     requestAnimationFrame(draw)
 }
