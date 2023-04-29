@@ -219,7 +219,7 @@ sphereCurrentY = new Array(50).fill(0)
 sphereCurrentX = new Array(50).fill(0)
 sphereCurrentZ = new Array(50).fill(0)
 
-sphereCurrentVelocity = new Array(50).fill(0) //replace '0' with Math.rand() later
+sphereCurrentVelocity = new Array(50).fill(Math.random() * 0.0) //replace '0' with Math.rand() later
 
 scale[0] = 0.15
 
@@ -238,7 +238,7 @@ function draw(milliseconds){
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
 
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
-    for (let i = 0; i < 2; i += 1){
+    for (let i = 0; i < 3; i += 1){
         window.m = m4mul(m4scale(scale[i], scale[i], scale[i])) // 1. set spheres to correct size
         if (bounce_flag[i]){
             window.m[12] = sphereCurrentX[i] // restore current X and Z positions
@@ -252,7 +252,7 @@ function draw(milliseconds){
         }
 
         console.log("sphere: ", i, "and current speed rn: " ,sphereCurrentVelocity[i])
-        sphereCurrentY[i] = sphereCurrentVelocity[i] * (real_ms - prevTime) * 0.001 + -0.000980665 * (real_ms - prevTime) * 0.01
+        sphereCurrentY[i] = sphereCurrentVelocity[i] * (real_ms - prevTime) * 0.001 
         // window.m[13] += sphereCurrentVelocity[i]*(real_ms - prevTime)*0.001 // euler's approx method for position
         sphereCurrentVelocity[i] += -0.000980665 * (real_ms - prevTime) * 0.01// euler's approx method for velocity
         window.m[13] = sphereCurrentY[i] //update positions in model matrix
@@ -290,7 +290,7 @@ function draw(milliseconds){
 
             prevTime = real_ms
             if (bounce_flag[i])
-                throw new Error("done after 2 bounces")
+                // throw new Error("done after 2 bounces")
             if (!bounce_flag[i])
                 bounce_flag[i] = true
         }
