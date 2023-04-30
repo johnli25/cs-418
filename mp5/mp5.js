@@ -195,35 +195,34 @@ function setupGeometry(geom) {
     }
 }
 
+// "sphere" class:
 /** @global scale and translation reference arrays (for drawing 50+ spheres) */
 scale = new Array()
 trans = new Array() // retains original translations/positions (for resetting purposes too)
 colors = new Array()
 for (let i = 0; i < 50; i += 1){
-    rand_trans = new Array()
-    rand_trans.push(parseFloat((Math.random() * (2 - (-2)) - 2).toFixed(4)))
-    rand_trans.push(parseFloat((Math.random() * (2- (-2)) - 2).toFixed(4)))
-    rand_trans.push(parseFloat((Math.random() * (2 - (-2)) - 2).toFixed(4)))
-    trans.push(rand_trans)
-    scale.push(Math.random() * 0.15)
+  rand_trans = new Array()
+  rand_trans.push(parseFloat((Math.random() * (2 - (-2)) - 2).toFixed(4)))
+  rand_trans.push(parseFloat((Math.random() * (2- (-1)) - 1).toFixed(4)))
+  rand_trans.push(parseFloat((Math.random() * (2 - (-2)) - 2).toFixed(4)))
+  trans.push(rand_trans)
+  scale.push(Math.random() * 0.15)
 }
 
 for (let i = 0; i < 50; i += 1){
-    color = new Float32Array([Math.random(), Math.random(), Math.random(), 1])
-    colors.push(color)
+  color = new Float32Array([Math.random(), Math.random(), Math.random(), 1])
+  colors.push(color)
 }
 
 prevTime = 0
-
 sphereCurrentY = new Array(50).fill(0)
 sphereCurrentX = new Array(50).fill(0)
 sphereCurrentZ = new Array(50).fill(0)
-
 sphereCurrentVelocity = new Array(50).fill(Math.random() * 0.0) //replace '0' with Math.rand() later
-
-scale[0] = 0.15
-
+sphereRadius = new Array(50).fill(0)
 bounce_flag = new Array(50).fill(false)
+
+scale[0] = 0.15 //dummy initialization
 
 function draw(milliseconds){
     real_ms = milliseconds // % 10000
@@ -238,7 +237,7 @@ function draw(milliseconds){
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
 
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
-    for (let i = 0; i < 3; i += 1){
+    for (let i = 0; i < 1; i += 1){
         window.m = m4mul(m4scale(scale[i], scale[i], scale[i])) // 1. set spheres to correct size
         if (bounce_flag[i]){
             window.m[12] = sphereCurrentX[i] // restore current X and Z positions
@@ -251,19 +250,12 @@ function draw(milliseconds){
             sphereCurrentZ[i] = window.m[14]
         }
 
-        console.log("sphere: ", i, "and current speed rn: " ,sphereCurrentVelocity[i])
-        sphereCurrentY[i] = sphereCurrentVelocity[i] * (real_ms - prevTime) * 0.001 
+        console.log("sphere: ", i, "and current speed rn: " , sphereCurrentVelocity[i])
+        sphereCurrentY[i] += sphereCurrentVelocity[i] * (real_ms - prevTime) * 0.001 
         // window.m[13] += sphereCurrentVelocity[i]*(real_ms - prevTime)*0.001 // euler's approx method for position
-        sphereCurrentVelocity[i] += -0.000980665 * (real_ms - prevTime) * 0.01// euler's approx method for velocity
         window.m[13] = sphereCurrentY[i] //update positions in model matrix
 
-        // if (window.m[13] >= 2 && window.m[13] <= 2.2){ // if y_position hits bounding box, negate velocity and travel other way
-        //     console.log("hit : ", window.m[13])
-        //     // window.m[13] = 1
-        //     // trans[i][1] = window.m[13]
-        //     // sphereCurrentPos[i] = ([window.m[12], window.m[13], window.m[14]])
-        //     sphereCurrentVelocity[i] *= -0.7
-        // }
+        sphereCurrentVelocity[i] += -0.000980665 * (real_ms - prevTime) * 0.01// euler's approx method for velocity
 
         if (milliseconds <= 40000){ //debug 
             console.log("sphere # ", i, ": ", window.m)
