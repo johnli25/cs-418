@@ -195,7 +195,7 @@ function setupGeometry(geom) {
     }
 }
 
-// "sphere" class:
+/** @global which represents "sphere" class: */
 /** @global scale and translation reference arrays (for drawing 50+ spheres) */
 scale = new Array()
 trans = new Array() // retains original translations/positions (for resetting purposes too)
@@ -207,34 +207,44 @@ for (let i = 0; i < 50; i += 1){
   rand_trans.push(parseFloat((Math.random() * (5- (-5)) - 5).toFixed(4)))
   rand_trans.push(parseFloat((Math.random() * (2 - (-2)) - 2).toFixed(4)))
   trans.push(rand_trans)
-  criticalStartPts.push(rand_trans)
+  rand_trans_copy = JSON.parse(JSON.stringify(rand_trans))
+  criticalStartPts.push(rand_trans_copy)
   scale.push(Math.random() * 0.15)
 }
+
+console.log("trans start", trans)
 
 for (let i = 0; i < 50; i += 1){
   color = new Float32Array([Math.random(), Math.random(), Math.random(), 1])
   colors.push(color)
 }
 
-// prevTime = Array.from({length: 50}, () => (new Array(3).fill(0)))
 prevTime = Array.from(Array(50), dummyName => Array(3).fill(0))
 prevTime[0][0] = 0.0
-console.log("prevtime", prevTime)
+// console.log("prevtime", prevTime)
 sphereCurrentY = new Array(50).fill(0)
 sphereCurrentX = new Array(50).fill(0)
 sphereCurrentZ = new Array(50).fill(0)
 sphereRadius = new Array(50).fill(0)
 sphereCurrentVelocityX = Array.from({length: 50}, () => (Math.random() * (2 - (-2)) - 2)) //replace '0' with Math.rand() later
 sphereCurrentVelocityY= Array.from({length: 50}, () => (Math.random() * (2- (-2)) - 2)) //replace '0' with Math.rand() later
-sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (1 - (-1)) - 1)) //replace '0' with Math.rand() later
-
-sphereRadius = new Array(50).fill(0)
-bounce_flag = new Array(50).fill(false)
-
+sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (2 - (-2)) - 2)) //replace '0' with Math.rand() later
+// console.log("start x velo", sphereCurrentVelocityX)
+// console.log("start y velo", sphereCurrentVelocityY)
+// console.log("start z velo", sphereCurrentVelocityZ)
 scale[0] = 0.15 //dummy initialization
 
+/** function for drawing the 50 spheres (with varying positions, velocities, colors, and scaling factors).
+ * incorporates x,y,z motions, drag, gravity, invisible bounding box collisions, etc.
+ * @param milliseconds
+ */
 function draw(milliseconds){
-    real_ms = milliseconds // % 10000
+    real_ms = milliseconds % 5000
+    console.log(real_ms)
+    if (real_ms >= 4980 && real_ms <= 5000){
+      console.log("reset")
+      reset()
+    }
     gl.clearColor(0.075, 0.16, 0.292, 1)
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     gl.useProgram(program)
@@ -246,42 +256,52 @@ function draw(milliseconds){
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), lightdir)
 
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
-    for (let i = 0; i < 1; i += 1){
+    for (let i = 0; i < 50; i += 1){
         // console.log("sphere: ", i, "and current Y speed rn: " , sphereCurrentVelocityY[i])
         // console.log("current position: ", sphereCurrentY[i])
-        sphereCurrentX[i] = criticalStartPts[i][0] + sphereCurrentVelocityX[i] * (real_ms) * 0.01
-        // console.log("x pos:", sphereCurrentX[i])
-        sphereCurrentY[i] = criticalStartPts[i][1] + sphereCurrentVelocityY[i] * (real_ms - prevTime[i][1]) * 0.01 
-        sphereCurrentZ[i] = criticalStartPts[i][2] + sphereCurrentVelocityZ[i]
-        sphereCurrentVelocityY[i] += -0.000980665 * (real_ms - prevTime[i][1]) * 0.01// euler's approx method for velocity
-        // if (milliseconds <= 40000){ //debug 
-        //     console.log("sphere # ", i, ": ", window.m)
+        sphereCurrentX[i] = criticalStartPts[i][0] + sphereCurrentVelocityX[i] * (real_ms - prevTime[i][0]) * 0.01
+        sphereCurrentY[i] = criticalStartPts[i][1] + sphereCurrentVelocityY[i] * (real_ms - prevTime[i][1]) * 0.01
+        sphereCurrentZ[i] = criticalStartPts[i][2] + sphereCurrentVelocityZ[i] * (real_ms - prevTime[i][2]) * 0.01
+        sphereCurrentVelocityY[i] += -0.000980665 * (real_ms - prevTime[i][1]) * 0.01 // euler's approx method for velocity
+
+        // if (milliseconds <= 8000){ //debug 
+        //     // console.log("sphere # ", i, ": ", window.m)
         // } else {
         //     throw new Error("beyond 4 s")
         // }
-        if (sphereCurrentY[i] <= -6.9){ // if y_position hits floor, negate velocity and travel other way
-            // console.log("BOUNCE NOW")
-            // console.log("y position: ", sphereCurrentY)
-            // console.log("prev velocity: ", sphereCurrentVelocityY[i])
-            criticalStartPts[i][1] = -6.9
-            sphereCurrentVelocityY[i] *= -0.8
+        // console.log(sphereCurrentVelocityX)
+        if (sphereCurrentY[i] <= -5.9){ // if y_position hits floor, negate velocity and travel other way
+            criticalStartPts[i][1] = -5.9
+            sphereCurrentVelocityY[i] *= -1.0
             // console.log("curr velocity: ", sphereCurrentVelocityY[i])
             prevTime[i][1] = real_ms
         }
 
-        // if (sphereCurrentY[i] >= 5.9){ // if y_position hits floor, negate velocity and travel other way
-        //   criticalStartPts[i][1] = 5.9
-        //   sphereCurrentVelocityY[i] *= -0.2
-        // }
-        if (sphereCurrentX[i] <= -6.9){ // if y_position hits floor, negate velocity and travel other way
-          criticalStartPts[i][0] = -6.9
-          sphereCurrentVelocityX[i] *= -0.99
+        if (sphereCurrentY[i] >= 5.9){ // if y_position hits floor, negate velocity and travel other way
+          criticalStartPts[i][1] = 5.9
+          sphereCurrentVelocityY[i] *= -0.2
+          prevTime[i][1] = real_ms
+        }
+        if (sphereCurrentX[i] <= -5.9){ // if x_position hits left, negate velocity and travel other way
+          criticalStartPts[i][0] = -5.9
+          sphereCurrentVelocityX[i] *= -0.7
           prevTime[i][0] = real_ms
-      }
-      if (sphereCurrentX[i] >= 5.9){ // if y_position hits floor, negate velocity and travel other way
-        criticalStartPts[i][0] = 5.9
-        sphereCurrentVelocityX[i] *= -0.99
-      }
+        }
+        if (sphereCurrentX[i] >= 5.9){ // if x_position hits right, negate velocity and travel other way
+          criticalStartPts[i][0] = 5.9
+          sphereCurrentVelocityX[i] *= -0.7
+          prevTime[i][0] = real_ms
+        }
+        if (sphereCurrentZ[i] <= -4.1){ // if z_position hits back, negate velocity and travel other way
+          criticalStartPts[i][2] = -4.1
+          sphereCurrentVelocityZ[i] *= -0.7
+          prevTime[i][2] = real_ms
+        }
+        if (sphereCurrentZ[i] >= 4.1){ // if z_position hits front, negate velocity and travel other way
+          criticalStartPts[i][2] = 4.1
+          sphereCurrentVelocityZ[i] *= -0.7
+          prevTime[i][2] = real_ms
+        }
 
       trans_mat = m4trans(sphereCurrentX[i], sphereCurrentY[i], sphereCurrentZ[i])
       window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), trans_mat) // 1. set spheres to correct size
@@ -296,7 +316,25 @@ function draw(milliseconds){
 }
 
 function reset(){ //function for reseting global variables, buffers, etc.
-
+  sphereCurrentVelocityX = Array.from({length: 50}, () => (Math.random() * (2 - (-2)) - 2)) //replace '0' with Math.rand() later
+  sphereCurrentVelocityY= Array.from({length: 50}, () => (Math.random() * (2- (-2)) - 2)) //replace '0' with Math.rand() later
+  sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (2 - (-2)) - 2)) //replace '0' with Math.rand() later
+  prevTime = Array.from(Array(50), dummyName => Array(3).fill(0))
+  prevTime[0][0] = 0.0
+  sphereCurrentY = Array.from({length: 50}, () => (0))
+  sphereCurrentX = Array.from({length: 50}, () => (0))
+  sphereCurrentZ = Array.from({length: 50}, () => (0))
+  criticalStartPts = JSON.parse(JSON.stringify(trans))
+  console.log("trans", trans)
+  console.log("start pts", criticalStartPts)
+  console.log("sphereCurrentVelocityX", sphereCurrentVelocityX)
+  console.log("sphereCurrentVelocityY", sphereCurrentVelocityY)
+  console.log("sphereCurrentVelocityZ", sphereCurrentVelocityZ)
+  console.log("prevTime", prevTime)
+  console.log("sphereCurrentX", sphereCurrentX)
+  console.log("sphereCurrentY", sphereCurrentY)
+  console.log("sphereCurrentZ", sphereCurrentZ)
+  // throw new Error("check reset vars")
 }
 
 /** Resizes the canvas to completely fill the screen */
