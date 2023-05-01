@@ -234,14 +234,17 @@ sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (2 - (-
 // console.log("start z velo", sphereCurrentVelocityZ)
 scale[0] = 0.15 //dummy initialization
 
+/** @global var for storing "previous" time (used for FPS display) */
+let then = Date.now() / 1000;  // get time in seconds
+
 /** function for drawing the 50 spheres (with varying positions, velocities, colors, and scaling factors).
  * incorporates x,y,z motions, drag, gravity, invisible bounding box collisions, etc.
  * @param milliseconds
  */
 function draw(milliseconds){
-    real_ms = milliseconds % 5000
+    real_ms = milliseconds % 10000
     console.log(real_ms)
-    if (real_ms >= 4980 && real_ms <= 5000){
+    if (real_ms >= 9980 && real_ms <= 10000){
       console.log("reset")
       reset()
     }
@@ -312,6 +315,15 @@ function draw(milliseconds){
       gl.drawElements(geom.mode, geom.count, geom.type, 0) // then draw things
     }
 
+    //FPS Display:
+    let now = Date.now() / 1000
+    let elapsedTime = now - then;
+    then = now;
+
+    // compute fps
+    let fps = 1 / elapsedTime;
+    fps = fps.toFixed(2)
+    document.querySelector('#fps').innerHTML = fps + " fps"
     window.pending = requestAnimationFrame(draw)
 }
 
