@@ -14,18 +14,6 @@ def clip_plane(p1, p2):
     # print("dot,", dot)
     return True if dot >= 0 else False
 
-# clip_plane_debug() and clip_plane_debug2() solely used for debugging purposes for clipplane!
-def clip_plane_debug(x, y): # draw/do NOT continue    
-    if ((x == 58 and y == 39) or (x == 58 and y == 40) or (x == 59 and y == 42)
-        or (x == 49 and y == 52)): # blue
-        return True
-    return False
-
-def clip_plane_debug2(x, y): # continue/do NOT draw
-    if (x == 28 and y == 59):
-        return True
-    return False
-
 def srgb_to_linear(srgb):
     lin = []
     for color in srgb:
@@ -49,6 +37,7 @@ def linear_to_srgb(lin):
     return np.array(srgb)
 
 def cull_edge_check(image, dda_rest):
+    # debugging purposes (for cull)-don't forget to remove during final version!
     for i,j in zip(range(19, 66), range(20, 113, 2)): # x-coord
         image.im.putpixel((i, j), (round(dda_rest[0][2]), round(dda_rest[0][3]), round(dda_rest[0][4]), 255))
 
