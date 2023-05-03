@@ -508,7 +508,7 @@ function timeStep(milliseconds) {
         toggleG = false
 
     window.m = m4mul(m4rotX(-Math.PI/2))
-    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.1,2.9], [10.0*y_angle,0.1 - 2.0*x_angle, 0], [0,1,0])) //weird that [10*y_angle,...x_angle] works great...keep it at that lol.
+    window.v = m4mul(m4rotY(y_angle), m4rotX(x_angle), m4trans(eyeCameraX, 0, eyeCameraZ), m4view([0,0.29,2.9], [10.0*y_angle,0.2 - 2.0*x_angle, 0], [0,1,0])) //weird that [10*y_angle,...x_angle] works great...keep it at that lol.
     // originally m4view([0,1,2.9], [0, 0 or 0.5, 0], [0,1,0])
 
     view_x = window.v[12]

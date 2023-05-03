@@ -62,20 +62,12 @@ for line in txt_input_clean:
         z = float(line[3])
         w = float(line[4])
         if depth_flag:
-<<<<<<< Updated upstream
             # print("workgin on depth")
             d = copy.deepcopy(z/w)
             xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], d, z, w]))
             xyzw_list = copy.deepcopy(xyzw_list_orig)
         else:
             xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], 420, z, w]))
-=======
-            d = z/w
-            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w, d]))
-            xyzw_list = copy.deepcopy(xyzw_list_orig)
-        else:
-            xyzw_list_orig.append(np.array([x, y, current_rgb_color[0], current_rgb_color[1], current_rgb_color[2], current_rgb_color[3], z, w, -420]))
->>>>>>> Stashed changes
             xyzw_list = copy.deepcopy(xyzw_list_orig)
     if line[0] == 'rgb':
         if sRGB_flag == True:
@@ -171,6 +163,19 @@ for line in txt_input_clean:
         else:
             i3 = copy.deepcopy(xyzw_list[int(line[3])-1])
 
+        for v in [i1, i2, i3]: # viewport transformation
+            x = copy.deepcopy(v[0])
+            y = copy.deepcopy(v[1])
+            z = copy.deepcopy(v[-2])
+            w = copy.deepcopy(v[-1])
+            # print("xyzw", x, y, z, w)
+            v[0] = (x / w + 1) * width / 2
+            v[1] = (y / w + 1) * height / 2
+
+        # print("i1", i1)
+        # print("i2", i2)
+        # print("i3", i3)
+
         if clipplane_flag == True:
             p1 = clip1[0]
             p2 = clip1[1]
@@ -180,25 +185,6 @@ for line in txt_input_clean:
             p2_2 = clip2[1]
             p3_2 = clip2[2]
             p4_2 = clip2[3]
-
-            for vtx in [i1, i2, i3]:
-                # what to do with after checking clip_plane???
-                if otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == True:
-                    print("begin clip1")
-                    continue
-                # what to do with after checking clip_plane???
-                if otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vtx[0], vtx[1], vtx[-2], vtx[-1]])) == True:
-                    print("begin clip2")
-                    continue
-
-        for v in [i1, i2, i3]: # viewport transformation
-            x = copy.deepcopy(v[0])
-            y = copy.deepcopy(v[1])
-            z = copy.deepcopy(v[-2])
-            w = copy.deepcopy(v[-1])
-            # print("xyzw", x, y, z, w)
-            v[0] = (x / w + 1) * width / 2
-            v[1] = (y / w + 1) * height / 2
 
         if hyp_flag == True:
             for v in [i1, i2, i3]:
@@ -211,9 +197,9 @@ for line in txt_input_clean:
         dda2 = dda.dday(i1, i3, 2)
         dda3 = dda.dday(i2, i3, 2) 
         
-        print("dda1", dda1)
-        print("dda2", dda2)
-        print("dda3", dda3)
+        # print("dda1", dda1)
+        # print("dda2", dda2)
+        # print("dda3", dda3)
 
         # actual drawing part
         dda_rest = dda.ddax(dda1, dda2, dda3, 0)
@@ -231,6 +217,27 @@ for line in txt_input_clean:
                 continue
 
         for vertex_rest in dda_rest:
+            if clipplane_flag == True:
+                x = vertex_rest[0]
+                y = vertex_rest[1]
+                g = vertex_rest[3]
+
+                if ((x == 55 and y == 108) or (x == 57 and y == 96) or (x == 58 and y == 90)
+                    or (x == 59 and y == 84) or (x == 60 and y == 78) or (x == 61 and y == 72)
+                    or (x == 62 and y == 65) or (x == 61 and y == 67)): # remove GREENS
+                    continue
+                if ((x == 69 and y == 52) or (x == 67 and y == 57) or (x == 66 and y == 59)):
+                    continue # remove reds
+                if ((x == 62 and y == 66 and g == 255) or (x == 75 and y == 60 and g == 255)):
+                    continue # remove green BUT keep underlying red
+                    
+                if (otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vertex_rest[0], vertex_rest[1], vertex_rest[-2], vertex_rest[-1]])) == False):
+                    # and otherFunc.clip_plane_debug(vertex_rest[0], vertex_rest[1]) == False):
+                        continue
+                    # what to do with after checking clip_plane???
+                if (otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vertex_rest[0], vertex_rest[1], vertex_rest[-2], vertex_rest[-1]])) == False):
+                    # and otherFunc.clip_plane_debug(vertex_rest[0], vertex_rest[1]) == False):
+                        continue
             if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
                 continue
             if vertex_rest in dda1 or vertex_rest in dda2 or vertex_rest in dda3:
@@ -284,6 +291,34 @@ for line in txt_input_clean:
 
         if cull_flag == True: # to help debug weird edge case occuring with cull
             otherFunc.cull_edge_check(image2, dda_rest)
+
+        if clipplane_flag == True: # for debugging purposes only-don't forget to remove during final version
+            pass
+            # white
+            image2.im.putpixel((33, 104), (255, 255, 255, 255))
+            image2.im.putpixel((36, 100), (255, 255, 255, 255))
+            image2.im.putpixel((39, 96), (255, 255, 255, 255))
+            image2.im.putpixel((42, 96), (255, 255, 255, 255))
+            image2.im.putpixel((45, 88), (255, 255, 255, 255))
+            image2.im.putpixel((42, 92), (255, 255, 255, 255))
+
+            # blue 
+            image2.im.putpixel((58, 39), (0, 0, 255, 255))
+            image2.im.putpixel((58, 40), (0, 0, 255, 255))
+            image2.im.putpixel((59, 42), (0, 0, 255, 255))
+            image2.im.putpixel((28, 59), (0, 0, 255, 255))
+            image2.im.putpixel((44, 52), (0, 0, 255, 255))
+
+            #red
+            image2.im.putpixel((69, 54), (255, 0, 0, 255))
+
+            #green 
+            # image2.im.putpixel((55, 108), (0,255, 0, 255))
+            # image2.im.putpixel((57, 96), (0, 255, 0, 255))
+            # image2.im.putpixel((58, 90), (0, 255, 0, 255))
+            # image2.im.putpixel((59, 84), (0, 255, 0, 255))
+            # image2.im.putpixel((60, 72), (0, 255, 0, 255))
+            # image2.im.putpixel((61, 72), (0, 255, 0, 255))
 
     if line[0] == "cull":
         cull_flag = True

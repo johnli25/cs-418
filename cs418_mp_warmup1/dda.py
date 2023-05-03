@@ -65,11 +65,7 @@ def dday(coord1, coord2, dim):
         p[5] += s[5]
         p[6] += s[6]
         p[7] += s[7]
-<<<<<<< Updated upstream
         p[8] += s[8]
-=======
-        p[8] += o[8]
->>>>>>> Stashed changes
 
     return output
 
@@ -113,11 +109,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
              math.ceil(line1[i][5]) - line1[i][5],
              math.ceil(line1[i][6]) - line1[i][6],
              math.ceil(line1[i][7]) - line1[i][7],
-<<<<<<< Updated upstream
              math.ceil(line1[i][8]) - line1[i][8])
-=======
-             math.ceil(line1[i][6]) - line1[i][8])
->>>>>>> Stashed changes
         o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4], e[5] * s[5],
              e[6] * s[6], e[7] * s[7], e[8] * s[8])
         p = list(line1[i])
@@ -182,11 +174,7 @@ def ddax(coord1_list, coord2_list, coord3_list, dim):
              math.ceil(line_extended[mid_offset + i][7]) - line_extended[mid_offset + i][7],
              math.ceil(line_extended[mid_offset + i][8]) - line_extended[mid_offset + i][8])
         o = (e[0] * s[0], e[0] * s[1], e[0] * s[2], e[0] * s[3], e[0] * s[4], e[5] * s[5],
-<<<<<<< Updated upstream
              e[6] * s[6], e[7] * s[7],  e[8] * s[8])
-=======
-             e[6] * s[6], e[7] * s[7], e[8] * s[8])
->>>>>>> Stashed changes
         p = line_extended[mid_offset + i]
         p[dim] += o[dim]
         p[1] += o[1]
