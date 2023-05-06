@@ -123,7 +123,6 @@ for line in txt_input_clean:
         # print("x and y: ", start_x, start_y)
         x_upper = min(math.ceil(x + pixel_wide / 2), width)
         y_upper = min(math.ceil(y + pixel_wide / 2), height)
-        # point_constant = otherFunc.point_edge_check(round(vertex_rest[0]), round(vertex_rest[1]), depth_buffer, newd) # to help debug
         for i in range(start_x, x_upper):
             for j in range(start_y, y_upper):
                 newd = vertex_i[-3]
@@ -242,11 +241,9 @@ for line in txt_input_clean:
                     continue # remove green BUT keep underlying red
                     
                 if (otherFunc.clip_plane(np.array([p1, p2, p3, p4]), np.array([vertex_rest[0], vertex_rest[1], vertex_rest[-2], vertex_rest[-1]])) == False):
-                    # and otherFunc.clip_plane_debug(vertex_rest[0], vertex_rest[1]) == False):
                         continue
                     # what to do with after checking clip_plane???
                 if (otherFunc.clip_plane(np.array([p1_2, p2_2, p3_2, p4_2]), np.array([vertex_rest[0], vertex_rest[1], vertex_rest[-2], vertex_rest[-1]])) == False):
-                    # and otherFunc.clip_plane_debug(vertex_rest[0], vertex_rest[1]) == False):
                         continue
             if (vertex_rest == [] or vertex_rest[0] < 0 or vertex_rest[0] >= width or vertex_rest[1] < 0 or vertex_rest[1] >= height):
                 continue
@@ -341,7 +338,8 @@ for line in txt_input_clean:
     if line[0] == "hyp":
         hyp_flag = True
 
-results.append(image2)
+image = image2
+results.append(image)
 results_name.append(str(image_name))
 
 for i in range(len(results)):

@@ -237,14 +237,23 @@ scale[0] = 0.15 //dummy initialization
 /** @global var for storing "previous" time (used for FPS display) */
 let then = Date.now() / 1000;  // get time in seconds
 
+function getDistance(x1, y1, z1, x2, y2, z2){
+  let y = x2 - x1;
+  let x = y2 - y1;
+  let z = z2 - z1;
+  
+  return Math.sqrt(x * x + y * y + z*z);
+}
+
+bounce = 0
+
 /** function for drawing the 50 spheres (with varying positions, velocities, colors, and scaling factors).
  * incorporates x,y,z motions, drag, gravity, invisible bounding box collisions, etc.
  * @param milliseconds
  */
 function draw(milliseconds){
-    real_ms = milliseconds % 10000
-    console.log(real_ms)
-    if (real_ms >= 9980 && real_ms <= 10000){
+    real_ms = milliseconds % 20000
+    if (real_ms >= 19980 && real_ms <= 20000){
       console.log("reset")
       reset()
     }
@@ -266,44 +275,64 @@ function draw(milliseconds){
         sphereCurrentY[i] = criticalStartPts[i][1] + sphereCurrentVelocityY[i] * (real_ms - prevTime[i][1]) * 0.01
         sphereCurrentZ[i] = criticalStartPts[i][2] + sphereCurrentVelocityZ[i] * (real_ms - prevTime[i][2]) * 0.01
         sphereCurrentVelocityY[i] += -0.000980665 * (real_ms - prevTime[i][1]) * 0.01 // euler's approx method for velocity
-
+        // console.log("sphere ", i, "current y:", sphereCurrentY[i] - scale[i])
+        // console.log("sphere", i, "current speed:", sphereCurrentVelocityY[i])
         // if (milliseconds <= 8000){ //debug 
         //     // console.log("sphere # ", i, ": ", window.m)
         // } else {
         //     throw new Error("beyond 4 s")
         // }
         // console.log(sphereCurrentVelocityX)
-        if (sphereCurrentY[i] <= -5.9){ // if y_position hits floor, negate velocity and travel other way
-            criticalStartPts[i][1] = -5.9
-            sphereCurrentVelocityY[i] *= -1.0
+        if (sphereCurrentY[i] - scale[i] <= -5.5){ // if y_position hits floor, negate velocity and travel other way
+            console.log("sphere", i, "before bounce speed:", sphereCurrentVelocityY[i])
+            criticalStartPts[i][1] = -5.5 + scale[i]
+            sphereCurrentVelocityY[i] *= -1.6
             // console.log("curr velocity: ", sphereCurrentVelocityY[i])
             prevTime[i][1] = real_ms
+            console.log("sphere", i, "after bounce speed:", sphereCurrentVelocityY[i])
+            // if (bounce_twice)
+            //   throw new Error("stop")
+            bounce += 1
+            // if (bounce_twice == 3)
+              // throw new Error("stop")
         }
 
-        if (sphereCurrentY[i] >= 5.9){ // if y_position hits floor, negate velocity and travel other way
-          criticalStartPts[i][1] = 5.9
+        if (sphereCurrentY[i] + scale[i] >= 5.5){ // if y_position hits floor, negate velocity and travel other way
+          criticalStartPts[i][1] = 5.5 - scale[i]
           sphereCurrentVelocityY[i] *= -0.2
           prevTime[i][1] = real_ms
         }
-        if (sphereCurrentX[i] <= -5.9){ // if x_position hits left, negate velocity and travel other way
-          criticalStartPts[i][0] = -5.9
+        if (sphereCurrentX[i] - scale[i] <= -5.9){ // if x_position hits left, negate velocity and travel other way
+          criticalStartPts[i][0] = -5.9 + scale[i]
           sphereCurrentVelocityX[i] *= -0.7
           prevTime[i][0] = real_ms
         }
-        if (sphereCurrentX[i] >= 5.9){ // if x_position hits right, negate velocity and travel other way
-          criticalStartPts[i][0] = 5.9
+        if (sphereCurrentX[i] + scale[i] >= 5.9){ // if x_position hits right, negate velocity and travel other way
+          criticalStartPts[i][0] = 5.9 - scale[i]
           sphereCurrentVelocityX[i] *= -0.7
           prevTime[i][0] = real_ms
         }
-        if (sphereCurrentZ[i] <= -4.1){ // if z_position hits back, negate velocity and travel other way
-          criticalStartPts[i][2] = -4.1
+        if (sphereCurrentZ[i] - scale[i] <= -4.1){ // if z_position hits back, negate velocity and travel other way
+          criticalStartPts[i][2] = -4.1 + scale[i]
           sphereCurrentVelocityZ[i] *= -0.7
           prevTime[i][2] = real_ms
         }
-        if (sphereCurrentZ[i] >= 4.1){ // if z_position hits front, negate velocity and travel other way
-          criticalStartPts[i][2] = 4.1
+        if (sphereCurrentZ[i] + scale[i] >= 4.1){ // if z_position hits front, negate velocity and travel other way
+          criticalStartPts[i][2] = 4.1 - scale[i]
           sphereCurrentVelocityZ[i] *= -0.7
           prevTime[i][2] = real_ms
+        }
+        for (let j = 0; j < 50; j += 1) {
+          if (i == j)
+            continue
+          sum_of_radii = scale[i] + scale[j]
+          distance_btwn_2_pts = getDistance(sphereCurrentX[i], sphereCurrentY[i], sphereCurrentZ[i], 
+            sphereCurrentX[j], sphereCurrentY[j], sphereCurrentZ[j]) 
+          if (distance_btwn_2_pts < sum_of_radii){
+              // console.log("sum radii", sum_of_radii)
+              // console.log("distance btwn 2 pts: ", distance_btwn_2_pts)
+              console.log("sphere i:", i, "and ", "sphere j: ", j)
+            }
         }
 
       trans_mat = m4trans(sphereCurrentX[i], sphereCurrentY[i], sphereCurrentZ[i])
@@ -361,7 +390,7 @@ function fillScreen() {
     canvas.style.height = ''
     if (window.gl) {
         gl.viewport(0,0, canvas.width, canvas.height)
-        window.p = m4perspNegZ(0.01, 100.0, 0.69, canvas.width, canvas.height)
+        window.p = m4perspNegZ(0.01, 100.0, 0.59, canvas.width, canvas.height)
     }
 }
 
