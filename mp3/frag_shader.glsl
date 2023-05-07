@@ -59,12 +59,24 @@ void main() {
         blinn2 = pow(max(dot(halfway2, normal), 0.0), 150.0);
     }
     if (height_color_ramp_flag == true){
-        uv = gl_FragCoord.xy / resolution;
-        v_color = vec3(0.0);
-        blue = vec4(0.0, 0.0, 1.0, 1.0);
-        v_color += mix(mainColor.rgb, blue.rgb, vPosition.z * 3.0);
-        mainColor = vec3(0.0);
-        mainColor += v_color;
+        if (vPosition.z >= -10.0){
+            uv = gl_FragCoord.z / resolution;
+            v_color = vec3(0.0);
+            blue = vec4(0.0, 0.0, 1.0, 1.0);
+            vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+            v_color += mix(mainColor.rgb, blue.rgb, vPosition.z * 3.0);
+            mainColor = vec3(0.0);
+            mainColor += v_color;
+        } else {
+            // uv = gl_FragCoord.z / resolution;
+            v_color = vec3(0.0);
+            blue = vec4(0.0, 0.0, 1.0, 1.0);
+            vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+            vec4 green = vec4(0.0, 1.00, 0.00, 1.0);
+            v_color += mix(red.rgb, green.rgb, vPosition.z * 2.5);
+            mainColor = vec3(0.0);
+            mainColor += v_color;
+        }
     }
     if (rocky_cliffs_flag == true){
         if (normal2.z >= 0.60 || normal2.z <= -0.60){
