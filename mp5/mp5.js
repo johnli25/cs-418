@@ -211,10 +211,10 @@ for (let i = 0; i < 50; i += 1){
   trans.push(rand_trans)
   rand_trans_copy = JSON.parse(JSON.stringify(rand_trans))
   criticalStartPts.push(rand_trans_copy)
-  scale_radius = Math.random() * 0.15
+  scale_radius = (Math.random() * (0.15 - (0.03)) + 0.03)
   scale.push(scale_radius) // replace with scale_radius
   radiuses.push(scale_radius)
-  mass.push(parseFloat((Math.random() * (200 - (1)) + 1).toFixed(4)))
+  mass.push(parseFloat((scale_radius * 10).toFixed(4))) // changed 'Math.random()' to scale_radius
 }
 
 console.log("mass", mass)
@@ -271,8 +271,8 @@ bounce = 0
  * @param milliseconds
  */
 function draw(milliseconds){
-    real_ms = milliseconds 
-    if (real_ms >= 9980 && real_ms <= 10000 && false){
+    real_ms = milliseconds % 10000
+    if (real_ms >= 9980 && real_ms <= 10000){
       console.log("reset")
       reset()
       real_ms = 0
@@ -289,10 +289,7 @@ function draw(milliseconds){
 
     gl.uniform3fv(gl.getUniformLocation(program, 'lightcolor'), [1,0.75,1])
     for (let i = 0; i < 50; i += 1){
-      gl.bindVertexArray(geom[i].vao)
-
-        // console.log("sphere: ", i, "and current Y speed rn: " , sphereCurrentVelocityY[i])
-        // console.log("current position: ", sphereCurrentY[i])
+        gl.bindVertexArray(geom[i].vao)
         sphereCurrentX[i] = criticalStartPts[i][0] + sphereCurrentVelocityX[i] * (real_ms - prevTime[i][0]) * 0.01
         sphereCurrentY[i] = criticalStartPts[i][1] + sphereCurrentVelocityY[i] * (real_ms - prevTime[i][1]) * 0.01
         sphereCurrentZ[i] = criticalStartPts[i][2] + sphereCurrentVelocityZ[i] * (real_ms - prevTime[i][2]) * 0.01
@@ -301,7 +298,6 @@ function draw(milliseconds){
         // console.log("sphere ", i, "current y:", sphereCurrentY[i] - radiuses[i])
         // console.log("sphere", i, "current speed:", sphereCurrentVelocityX[i])
         // console.log("sphereCurrentX", sphereCurrentX[i])
-        // console.log("sphereCurrentY", sphereCurrentY[i])
         // if (milliseconds <= 1000){ //debug 
         //     // console.log("sphere # ", i, ": ", window.m)
         // } else {
@@ -309,9 +305,9 @@ function draw(milliseconds){
         // }
         // console.log(sphereCurrentVelocityX)
         console.log("sphere", i, "radius", radiuses[i])
-        if (sphereCurrentY[i] - radiuses[i] <= -1.0){ // if y_position hits floor, negate velocity and travel other way
+        if (sphereCurrentY[i] - radiuses[i] <= -0.8){ // if y_position hits floor, negate velocity and travel other way
             // console.log("sphere", i, "before bounce speed:", sphereCurrentVelocityY[i])
-            criticalStartPts[i][1] = -1.0 + radiuses[i]
+            criticalStartPts[i][1] = -0.8 + radiuses[i]
             sphereCurrentVelocityY[i] *= -1.4
             prevTime[i][1] = real_ms
             // console.log("sphere", i, "after bounce speed:", sphereCurrentVelocityY[i])
@@ -334,13 +330,13 @@ function draw(milliseconds){
           sphereCurrentVelocityX[i] *= -0.7
           prevTime[i][0] = real_ms
         }
-        if (sphereCurrentZ[i] - radiuses[i] <= -1.0){ // if z_position hits back, negate velocity and travel other way
-          criticalStartPts[i][2] = -1.0 + radiuses[i]
+        if (sphereCurrentZ[i] - radiuses[i] <= -0.8){ // if z_position hits back, negate velocity and travel other way
+          criticalStartPts[i][2] = -0.8 + radiuses[i]
           sphereCurrentVelocityZ[i] *= -0.7
           prevTime[i][2] = real_ms
         }
-        if (sphereCurrentZ[i] + radiuses[i] >= 1.0){ // if z_position hits front, negate velocity and travel other way
-          criticalStartPts[i][2] = 1.0 - radiuses[i]
+        if (sphereCurrentZ[i] + radiuses[i] >= 0.8){ // if z_position hits front, negate velocity and travel other way
+          criticalStartPts[i][2] = 0.8 - radiuses[i]
           sphereCurrentVelocityZ[i] *= -0.7
           prevTime[i][2] = real_ms
         }
