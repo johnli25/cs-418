@@ -211,9 +211,9 @@ for (let i = 0; i < 50; i += 1){
   trans.push(rand_trans)
   rand_trans_copy = JSON.parse(JSON.stringify(rand_trans))
   criticalStartPts.push(rand_trans_copy)
-  scale_radius = Math.random() * 0.25
+  scale_radius = Math.random() * 0.15
   scale.push(scale_radius) // replace with scale_radius
-  radiuses.push(0.1)
+  radiuses.push(scale_radius)
   mass.push(parseFloat((Math.random() * (200 - (1)) + 1).toFixed(4)))
 }
 
@@ -271,8 +271,8 @@ bounce = 0
  * @param milliseconds
  */
 function draw(milliseconds){
-    real_ms = milliseconds % 10000
-    if (real_ms >= 9980 && real_ms <= 10000){
+    real_ms = milliseconds 
+    if (real_ms >= 9980 && real_ms <= 10000 && false){
       console.log("reset")
       reset()
       real_ms = 0
@@ -394,13 +394,13 @@ function draw(milliseconds){
 
               // console.log("weight i, weight j", weight_i, weight_j)
 
-              sphereCurrentVelocityX[i] -= weight_j * (1 + 0.9) * s * d[0] * 0.9
-              sphereCurrentVelocityY[i] -= weight_j * (1 + 0.9) * s * d[1] * 0.9
-              sphereCurrentVelocityZ[i] -= weight_j * (1 + 0.9) * s * d[2] * 0.9
+              sphereCurrentVelocityX[i] -= weight_j * (1 + 0.5) * s * d[0] * 0.9
+              sphereCurrentVelocityY[i] -= weight_j * (1 + 0.5) * s * d[1] * 0.9
+              sphereCurrentVelocityZ[i] -= weight_j * (1 + 0.5) * s * d[2] * 0.9
 
-              sphereCurrentVelocityX[j] += weight_i * (1 + 0.9) * s * d[0] * 0.9
-              sphereCurrentVelocityY[j] += weight_i * (1 + 0.9) * s * d[1] * 0.9
-              sphereCurrentVelocityZ[j] += weight_i * (1 + 0.9) * s * d[2] * 0.9
+              sphereCurrentVelocityX[j] += weight_i * (1 + 0.5) * s * d[0] * 0.9
+              sphereCurrentVelocityY[j] += weight_i * (1 + 0.5) * s * d[1] * 0.9
+              sphereCurrentVelocityZ[j] += weight_i * (1 + 0.5) * s * d[2] * 0.9
               
               prevTime[i][0] = real_ms
               prevTime[i][1] = real_ms
@@ -523,9 +523,9 @@ async function setup(event){
     for (let ball_num = 0; ball_num < 50; ball_num += 1){
       sphere = JSON.parse(JSON.stringify(sphere_json))
       for (let i = 0; i < sphere.attributes.position.length; i += 1){
-        sphere.attributes.position[i][0] *= 0.1
-        sphere.attributes.position[i][1] *= 0.1
-        sphere.attributes.position[i][2] *= 0.1
+        sphere.attributes.position[i][0] *= scale[ball_num]
+        sphere.attributes.position[i][1] *= scale[ball_num]
+        sphere.attributes.position[i][2] *= scale[ball_num]
       }
       console.log(sphere)
       window.geom[ball_num] = setupGeometry(sphere)
