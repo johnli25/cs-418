@@ -212,8 +212,8 @@ for (let i = 0; i < 50; i += 1){
   rand_trans_copy = JSON.parse(JSON.stringify(rand_trans))
   criticalStartPts.push(rand_trans_copy)
   scale_radius = Math.random() * 0.25
-  scale.push(0.1) // replace with scale_radius
-  radiuses.push(1.0)
+  scale.push(scale_radius) // replace with scale_radius
+  radiuses.push(0.1)
   mass.push(parseFloat((Math.random() * (200 - (1)) + 1).toFixed(4)))
 }
 
@@ -235,8 +235,8 @@ sphereCurrentZ = new Array(50).fill(0)
 sphereRadius = new Array(50).fill(0)
 sphereCurrentVelocityX = Array.from({length: 50}, () => (Math.random() * (10.0 - (-10.0)) - 10.0)) //replace '0' with Math.rand() later
 sphereCurrentVelocityY= Array.from({length: 50}, () => (Math.random() * (1.0 - (-1.0)) - 1.0)) //replace '0' with Math.rand() later
-// sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (1.0 - (-1.0)) - 1.0)) //replace '0' with Math.rand() later
-sphereCurrentVelocityZ = Array.from({length: 50}, () => 0.0) //replace '0' with Math.rand() later
+sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (1.0 - (-1.0)) - 1.0)) //replace '0' with Math.rand() later
+// sphereCurrentVelocityZ = Array.from({length: 50}, () => 0.0) //replace '0' with Math.rand() later
 // console.log("start x velo", sphereCurrentVelocityX)
 // console.log("start y velo", sphereCurrentVelocityY)
 // console.log("start z velo", sphereCurrentVelocityZ)
@@ -296,10 +296,10 @@ function draw(milliseconds){
         sphereCurrentX[i] = criticalStartPts[i][0] + sphereCurrentVelocityX[i] * (real_ms - prevTime[i][0]) * 0.01
         sphereCurrentY[i] = criticalStartPts[i][1] + sphereCurrentVelocityY[i] * (real_ms - prevTime[i][1]) * 0.01
         sphereCurrentZ[i] = criticalStartPts[i][2] + sphereCurrentVelocityZ[i] * (real_ms - prevTime[i][2]) * 0.01
-        sphereCurrentZ[i] = 0
+        // sphereCurrentZ[i] = 0
         sphereCurrentVelocityY[i] += -0.000980665 * (real_ms - prevTime[i][1]) * 0.01 // euler's approx method for velocity
         // console.log("sphere ", i, "current y:", sphereCurrentY[i] - radiuses[i])
-        console.log("sphere", i, "current speed:", sphereCurrentVelocityX[i])
+        // console.log("sphere", i, "current speed:", sphereCurrentVelocityX[i])
         // console.log("sphereCurrentX", sphereCurrentX[i])
         // console.log("sphereCurrentY", sphereCurrentY[i])
         // if (milliseconds <= 1000){ //debug 
@@ -308,10 +308,10 @@ function draw(milliseconds){
         //     throw new Error("beyond 4 s")
         // }
         // console.log(sphereCurrentVelocityX)
-        // console.log("sphere", i, "radius", radiuses[i])
-        if (sphereCurrentY[i] - radiuses[i] <= -11.0){ // if y_position hits floor, negate velocity and travel other way
+        console.log("sphere", i, "radius", radiuses[i])
+        if (sphereCurrentY[i] - radiuses[i] <= -1.0){ // if y_position hits floor, negate velocity and travel other way
             // console.log("sphere", i, "before bounce speed:", sphereCurrentVelocityY[i])
-            criticalStartPts[i][1] = -11.0 + radiuses[i]
+            criticalStartPts[i][1] = -1.0 + radiuses[i]
             sphereCurrentVelocityY[i] *= -1.4
             prevTime[i][1] = real_ms
             // console.log("sphere", i, "after bounce speed:", sphereCurrentVelocityY[i])
@@ -319,28 +319,28 @@ function draw(milliseconds){
             // if (bounce == 2)
             //   throw new Error("stop")
         }
-        if (sphereCurrentY[i] + radiuses[i] >= 11.0){ // if y_position hits floor, negate velocity and travel other way
-          criticalStartPts[i][1] = 11.0 - radiuses[i]
+        if (sphereCurrentY[i] + radiuses[i] >= 1.0){ // if y_position hits floor, negate velocity and travel other way
+          criticalStartPts[i][1] = 1.0 - radiuses[i]
           sphereCurrentVelocityY[i] *= -0.2
           prevTime[i][1] = real_ms
         }
-        if (sphereCurrentX[i] - radiuses[i] <= -11.0){ // if x_position hits left, negate velocity and travel other way
-          criticalStartPts[i][0] = -11.0 + radiuses[i]
+        if (sphereCurrentX[i] - radiuses[i] <= -1.0){ // if x_position hits left, negate velocity and travel other way
+          criticalStartPts[i][0] = -1.0 + radiuses[i]
           sphereCurrentVelocityX[i] *= -0.7
           prevTime[i][0] = real_ms
         }
-        if (sphereCurrentX[i] + radiuses[i] >= 11.0){ // if x_position hits right, negate velocity and travel other way
-          criticalStartPts[i][0] = 11.0 - radiuses[i]
+        if (sphereCurrentX[i] + radiuses[i] >= 1.0){ // if x_position hits right, negate velocity and travel other way
+          criticalStartPts[i][0] = 1.0 - radiuses[i]
           sphereCurrentVelocityX[i] *= -0.7
           prevTime[i][0] = real_ms
         }
-        if (sphereCurrentZ[i] - radiuses[i] <= -11.0){ // if z_position hits back, negate velocity and travel other way
-          criticalStartPts[i][2] = -11.0 + radiuses[i]
+        if (sphereCurrentZ[i] - radiuses[i] <= -1.0){ // if z_position hits back, negate velocity and travel other way
+          criticalStartPts[i][2] = -1.0 + radiuses[i]
           sphereCurrentVelocityZ[i] *= -0.7
           prevTime[i][2] = real_ms
         }
-        if (sphereCurrentZ[i] + radiuses[i] >= 11.0){ // if z_position hits front, negate velocity and travel other way
-          criticalStartPts[i][2] = 11.0 - radiuses[i]
+        if (sphereCurrentZ[i] + radiuses[i] >= 1.0){ // if z_position hits front, negate velocity and travel other way
+          criticalStartPts[i][2] = 1.0 - radiuses[i]
           sphereCurrentVelocityZ[i] *= -0.7
           prevTime[i][2] = real_ms
         }
@@ -413,8 +413,8 @@ function draw(milliseconds){
         }
 
       trans_mat = m4trans(sphereCurrentX[i], sphereCurrentY[i], sphereCurrentZ[i])
-      window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), trans_mat) // 1. set spheres to correct size
-
+      window.m = m4mul( trans_mat) // 1. set spheres to correct size
+      // window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), window.m)
       gl.uniform4fv(gl.getUniformLocation(program, 'color'), colors[i])
 
       gl.uniformMatrix4fv(gl.getUniformLocation(program, 'mv'), false, m4mul(v, m))
@@ -438,7 +438,6 @@ function reset(){ //function for reseting global variables, buffers, etc.
   sphereCurrentVelocityY= Array.from({length: 50}, () => (Math.random() * (2.0 - (-2.0)) - 2.0)) //replace '0' with Math.rand() later
   sphereCurrentVelocityZ = Array.from({length: 50}, () => (Math.random() * (2.0 - (-2.0)) - 2.0)) //replace '0' with Math.rand() later
   prevTime = Array.from(Array(50), dummyName => Array(3).fill(0))
-  prevTime[0][0] = 0.0
   for (let i = 0; i < prevTime.length; i += 1){
     for (let j = 0; j < 3; j += 1){
       prevTime[i][j] = 0
@@ -448,15 +447,15 @@ function reset(){ //function for reseting global variables, buffers, etc.
   sphereCurrentX = Array.from({length: 50}, () => (0))
   sphereCurrentZ = Array.from({length: 50}, () => (0))
   criticalStartPts = JSON.parse(JSON.stringify(trans))
-  // console.log("trans", trans)
-  // console.log("start pts", criticalStartPts)
-  // console.log("sphereCurrentVelocityX", sphereCurrentVelocityX)
-  // console.log("sphereCurrentVelocityY", sphereCurrentVelocityY)
-  // console.log("sphereCurrentVelocityZ", sphereCurrentVelocityZ)
-  // console.log("prevTime", prevTime)
-  // console.log("sphereCurrentX", sphereCurrentX)
-  // console.log("sphereCurrentY", sphereCurrentY)
-  // console.log("sphereCurrentZ", sphereCurrentZ)
+  console.log("trans", trans)
+  console.log("start pts", criticalStartPts)
+  console.log("sphereCurrentVelocityX", sphereCurrentVelocityX)
+  console.log("sphereCurrentVelocityY", sphereCurrentVelocityY)
+  console.log("sphereCurrentVelocityZ", sphereCurrentVelocityZ)
+  console.log("prevTime", prevTime)
+  console.log("sphereCurrentX", sphereCurrentX)
+  console.log("sphereCurrentY", sphereCurrentY)
+  console.log("sphereCurrentZ", sphereCurrentZ)
 }
 
 /** Resizes the canvas to completely fill the screen */
@@ -520,12 +519,13 @@ async function setup(event){
     gl.enable(gl.DEPTH_TEST)
 
     let sphere_json = await fetch('sphere.json').then(res => res.json())
-    sphere = sphere_json
+    // sphere = sphere_jso/n
     for (let ball_num = 0; ball_num < 50; ball_num += 1){
+      sphere = JSON.parse(JSON.stringify(sphere_json))
       for (let i = 0; i < sphere.attributes.position.length; i += 1){
-        sphere.attributes.position[i][0] *= 1
-        sphere.attributes.position[i][1] *= 1
-        sphere.attributes.position[i][2] *= 1
+        sphere.attributes.position[i][0] *= 0.1
+        sphere.attributes.position[i][1] *= 0.1
+        sphere.attributes.position[i][2] *= 0.1
       }
       console.log(sphere)
       window.geom[ball_num] = setupGeometry(sphere)
