@@ -37,8 +37,9 @@ def linear_to_srgb(lin):
     return np.array(srgb)
 
 def cull_edge_check(image, dda_rest):
-    # debugging purposes (for cull)-don't forget to remove during final version!
+    # debugging purposes (for cull)-not included in final version
     for i,j in zip(range(19, 66), range(20, 113, 2)): # x-coord
+        pass
         image.im.putpixel((i, j), (round(dda_rest[0][2]), round(dda_rest[0][3]), round(dda_rest[0][4]), 255))
 
 def ddax_line(coord1, coord2):
@@ -74,6 +75,7 @@ def ddax_line(coord1, coord2):
 
     return output
 def point_edge_check(pix):
+    pass
     if pix[0] == 255:
         return 0.0029017621610200606 
     if pix[1] == 255:
@@ -83,6 +85,7 @@ def point_edge_check(pix):
     
 def point_edge_case2(i, j, newd):
     if i == 59 and j == 41:
+        pass
         # print("newd", newd)
         return True
     return False

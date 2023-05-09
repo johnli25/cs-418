@@ -525,6 +525,7 @@ async function setup(event){
       }
       console.log(sphere)
       window.geom[ball_num] = setupGeometry(sphere)
+      console.log(window.geom[ball_num])
     }
     fillScreen()
     window.addEventListener('resize', fillScreen)

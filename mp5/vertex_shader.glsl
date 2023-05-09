@@ -14,6 +14,7 @@ out vec3 outNormal;
 
 void main() {
     gl_Position = p * mv * position;
+    // gl_PointSize = 10.0;
     outNormal = normalize(normal);
     // if (vtx_color_flag == false)
     //     vColor = color;
