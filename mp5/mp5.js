@@ -200,7 +200,6 @@ function setupGeometry(geom) {
 scale = new Array()
 trans = new Array() // retains original translations/positions (for resetting purposes too)
 criticalStartPts = new Array()
-colors = new Array()
 mass = new Array()
 radiuses = new Array()
 for (let i = 0; i < 50; i += 1){
@@ -219,6 +218,7 @@ for (let i = 0; i < 50; i += 1){
 
 console.log("mass", mass)
 
+colors = new Array()
 for (let i = 0; i < 50; i += 1){
   color = new Float32Array([Math.random(), Math.random(), Math.random(), 1])
   colors.push(color)
@@ -409,7 +409,7 @@ function draw(milliseconds){
         }
 
       trans_mat = m4trans(sphereCurrentX[i], sphereCurrentY[i], sphereCurrentZ[i])
-      window.m = m4mul( trans_mat) // 1. set spheres to correct size
+      window.m = m4mul(trans_mat) // 1. set spheres to correct size
       // window.m = m4mul(m4scale(scale[i], scale[i], scale[i]), window.m)
       gl.uniform4fv(gl.getUniformLocation(program, 'color'), colors[i])
 
