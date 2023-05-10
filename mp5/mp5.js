@@ -304,7 +304,7 @@ function draw(milliseconds){
         //     throw new Error("beyond 4 s")
         // }
         // console.log(sphereCurrentVelocityX)
-        console.log("sphere", i, "radius", radiuses[i])
+        console.log("sphere", i, "ypostiion", sphereCurrentY[i])
         if (sphereCurrentY[i] - radiuses[i] <= -0.8){ // if y_position hits floor, negate velocity and travel other way
             // console.log("sphere", i, "before bounce speed:", sphereCurrentVelocityY[i])
             criticalStartPts[i][1] = -0.8 + radiuses[i]
@@ -315,10 +315,20 @@ function draw(milliseconds){
             // if (bounce == 2)
             //   throw new Error("stop")
         }
-        if (sphereCurrentY[i] + radiuses[i] >= 1.0){ // if y_position hits floor, negate velocity and travel other way
+        if (sphereCurrentY[i] + radiuses[i] >= 1.0){ // if y_position hits ceiling, negate velocity and travel other way
           criticalStartPts[i][1] = 1.0 - radiuses[i]
-          sphereCurrentVelocityY[i] *= -0.2
+          sphereCurrentVelocityY[i] *= -0.5
           prevTime[i][1] = real_ms
+        }
+        if (real_ms > 9500 && sphereCurrentY[i] > 0.81){
+          console.log("sphere ", i)
+          console.log("y velo", sphereCurrentVelocityY[i])
+          console.log("y pos", sphereCurrentY[i])
+          console.log("x velo", sphereCurrentVelocityX[i])
+          console.log("x pos", sphereCurrentX[i])
+          console.log("z velo", sphereCurrentVelocityZ[i])
+          console.log("z pos", sphereCurrentZ[i])
+          throw new Error("stop")
         }
         if (sphereCurrentX[i] - radiuses[i] <= -1.0){ // if x_position hits left, negate velocity and travel other way
           criticalStartPts[i][0] = -1.0 + radiuses[i]
