@@ -211,7 +211,7 @@ for (let i = 0; i < 50; i += 1){
   trans.push(rand_trans)
   rand_trans_copy = JSON.parse(JSON.stringify(rand_trans))
   criticalStartPts.push(rand_trans_copy)
-  scale_radius = (Math.random() * (0.15 - (0.03)) + 0.03)
+  scale_radius = (Math.random() * (0.20 - (0.08)) + 0.08)
   scale.push(scale_radius) // replace with scale_radius
   radiuses.push(scale_radius)
   mass.push(parseFloat((scale_radius * 10).toFixed(4))) // changed 'Math.random()' to scale_radius
